@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 interface ScanFormProps {
-  handleFileUpload: (file: File) => Promise<ProcessScanResponse>;
+  handleFileUpload: (file: File) => Promise<ProcessScanResponse | undefined>;
 }
 const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -29,8 +29,10 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
     if (inputFile) {
       setLoading(true);
       const data = await handleFileUpload(inputFile);
-      const textFromData = data.data.text;
-      setResult(textFromData);
+      const textFromData = data?.data.text;
+      if (textFromData) {
+        setResult(textFromData);
+      }
       setLoading(false);
     }
   });
