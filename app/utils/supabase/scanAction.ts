@@ -47,6 +47,7 @@ export async function handleFileUpload(file: File) {
       throw new Error(`Edge function failed: ${functionError.message}`);
     }
     console.log("✅ Edge Function Success Data:", functionData);
+    return functionData;
   } catch (err: any) {
     console.error(err);
   }
