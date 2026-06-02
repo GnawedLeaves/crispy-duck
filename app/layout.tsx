@@ -22,7 +22,7 @@ const josefinSans = Josefin_Sans({
 // });
 
 export const metadata: Metadata = {
-  title: "NTUC Scanner",
+  title: "Crispy Duck",
   description: "An app for you to store your body composition",
 };
 

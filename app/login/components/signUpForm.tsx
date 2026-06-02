@@ -55,7 +55,7 @@ const SignUpForm = ({}: {}) => {
           {error && <div style={{ color: "red" }}>{error.message}</div>}
           {success && <div style={{ color: "green" }}>Sign up successful!</div>}
           <button
-            className="shadow border p-2 rounded-2xl bg-amber-400 cursor-pointer"
+            className="standardShadow border p-2 rounded-2xl bg-amber-400 cursor-pointer"
             type="submit"
           >
             Sign Up

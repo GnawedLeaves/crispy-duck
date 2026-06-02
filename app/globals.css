@@ -28,8 +28,7 @@ body {
   font-family: var(--font-josefin);
 }
 .contentLayout {
-  padding: 1rem 2rem 3rem 2rem;
-  /* background: #f04b4b; */
+  padding: 2rem 2rem 3rem 2rem;
   background: var(--bg-color);
   min-width: 100%;
   min-height: 100vh;
@@ -44,10 +43,38 @@ body {
 .cardWithShadow {
   box-shadow: 4px 4px 0px 0px var(--text-color);
   border: 2px solid var(--text-color);
-  /* border-radius: 8px; */
   background-color: var(--bg-color);
 }
 
-.shadow {
+.standardButton {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--text-color);
+  border-radius: 8px;
   box-shadow: 4px 4px 0px 0px var(--text-color);
+  transition:
+    box-shadow 0.1s ease,
+    transform 0.1s ease;
+  background: var(--bg-color);
+}
+
+.standardButton:active {
+  box-shadow: inset 2px 2px 0px 0px var(--text-color);
+  transform: translate(2px, 2px);
+}
+
+.standardShadow {
+  box-shadow: 4px 4px 0px 0px var(--text-color);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.standardBorder {
+  border: 2px solid var(--text-color);
+}
+
+.flexCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
