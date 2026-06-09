@@ -49,7 +49,17 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
     }
   }, [result]);
 
-  console.log({ processedResult, result });
+  const renderResults = () => {
+    if (!processedResult) return <div>-</div>;
+    return Object.entries(processedResult).map(([key, value]) => {
+      return (
+        <div style={{ textAlign: "left" }}>
+          {key}: {value} <br />
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="flexCenter flex-col gap-4">
       {imagePreview && (
@@ -91,7 +101,10 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
       )}
       {loading && <span className="loading loading-spinner loading-md"></span>}
       <br />
-      {result && "Results: " + result}
+
+      <div className="flexCenter" style={{ flexDirection: "column" }}>
+        {renderResults()}
+      </div>
     </div>
   );
 };
