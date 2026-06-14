@@ -9,7 +9,8 @@ export default function Home() {
       <div>
         <ProfileBanner />
       </div>
-      {/* <SignOutForm /> */}
+      For emergency:
+      <SignOutForm />
     </div>
   );
 }

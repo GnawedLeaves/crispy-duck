@@ -1,6 +1,8 @@
 "use server";
 
+import { ITautaScanData } from "@/app/types/commonTypes";
 import { createClient } from "@/app/utils/supabase/server";
+import dayjs from "dayjs";
 import { cookies } from "next/headers";
 export interface ProcessScanResponse {
   success: boolean;
@@ -61,3 +63,40 @@ export async function handleFileUpload(file: File) {
     console.error(err);
   }
 }
+
+export const uploadScanData = async (
+  scannedData: ITautaScanData,
+  currentUserId: string,
+) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  // Convert "15/JAN/2056" to "2056-01-15" using your dayjs library or native JS
+  const formattedDate = dayjs(scannedData.scanDate, "DD/MMM/YYYY").format(
+    "YYYY-MM-DD",
+  );
+
+  const { data, error } = await supabase.from("tanita_scans").insert([
+    {
+      user_id: currentUserId,
+      scan_date: formattedDate,
+      scan_time: scannedData.scanTime,
+      weight: scannedData.weight,
+      clothes_weight: scannedData.clothesWeight,
+      fat_percentage: scannedData.fatPercentage,
+      fat_mass: scannedData.fatMass,
+      ffm: scannedData.ffm,
+      muscle_mass: scannedData.muscleMass,
+      tbw: scannedData.tbw,
+      tbw_percent: scannedData.tbwPercent,
+      bone_mass: scannedData.boneMass,
+      bmr: scannedData.bmr,
+      metabolic_age: scannedData.metabolicAge,
+      visceral_fat_rating: scannedData.visceralFatRating,
+      bmi: scannedData.bmi,
+      degree_of_obesity: scannedData.degreeOfObesity || null,
+      ideal_body_weight: scannedData.idealBodyWeight || null,
+    },
+  ]);
+
+  return { data, error };
+};

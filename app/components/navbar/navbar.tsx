@@ -18,7 +18,7 @@ const Navbar = () => {
   const isActive = (path: string) => pathname === path;
   if (user) {
     return (
-      <div className="fixed w-full h-fit px-2 py-6 bottom-0 flex items-center justify-center">
+      <div className="fixed w-full h-fit px-2 py-6 bottom-0 flex items-center justify-center z-10">
         <div
           className={`cardWithShadow flex gap-8 items-center justify-center rounded-3xl border-2 `}
           style={{
