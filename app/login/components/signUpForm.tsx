@@ -1,11 +1,12 @@
 "use client";
-
+import dayjs from "dayjs";
 import { useAuth } from "@/app/context/AuthContext";
 import { withDelay } from "@/app/utils/common";
 import { signUpAction, signUpAsGuestAction } from "@/app/utils/login/authUtils";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./styles.module.css";
+import { BirthdayPicker } from "@/app/components/birthdayPicker/BirthdayPicker";
 
 interface LoginFormError {
   message: string;
@@ -13,32 +14,35 @@ interface LoginFormError {
   status?: number;
 }
 
-const SignUpForm = ({ }: {}) => {
+const SignUpForm = () => {
   const [inputEmail, setInputEmail] = useState<string>("");
-  const [inputUsername, setInputUsername] = useState<string>("");
+  const [inputDisplayName, setDisplayName] = useState<string>("");
   const [inputPassword, setInputPassword] = useState<string>("");
   const [inputSex, setInputSex] = useState<string>("");
+  const [inputBirthday, setInputBirthday] = useState<string>("");
 
   const [error, setError] = useState<LoginFormError | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const router = useRouter();
   const { refreshUser } = useAuth();
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  // Changed React.SubmitEvent to React.FormEvent<HTMLFormElement>
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    if (inputUsername === "") {
-      setError({
-        message: "User name cannot be blank",
-      });
+    if (inputDisplayName === "") {
+      setError({ message: "User name cannot be blank" });
       return;
     }
 
     const { data, error } = await signUpAction({
       email: inputEmail,
       password: inputPassword,
-      username: inputUsername,
+      display_name: inputDisplayName,
+      birthday: inputBirthday,
+      sex: inputSex,
     });
+
     if (error) {
       setError(error);
       setSuccess(false);
@@ -46,6 +50,8 @@ const SignUpForm = ({ }: {}) => {
       setSuccess(true);
       setInputEmail("");
       setInputPassword("");
+      setInputSex("");
+      setInputBirthday("");
       await refreshUser();
       router.push("/");
     }
@@ -68,7 +74,7 @@ const SignUpForm = ({ }: {}) => {
       <form onSubmit={handleSubmit}>
         <div className="flex gap-5 flex-col">
           <input
-            className={styles.signUpFormField}
+            className={"signUpFormField"}
             type="email"
             value={inputEmail}
             onChange={(e) => setInputEmail(e.target.value)}
@@ -76,31 +82,39 @@ const SignUpForm = ({ }: {}) => {
             required
           />
           <input
-            className={styles.signUpFormField}
+            className={"signUpFormField"}
             type="text"
-            value={inputUsername}
-            onChange={(e) => setInputUsername(e.target.value)}
+            value={inputDisplayName}
+            onChange={(e) => setDisplayName(e.target.value)}
             placeholder="User name"
             required
-
+            maxLength={30}
           />
           <input
-            className={styles.signUpFormField}
-            type="text"
-            value={inputSex}
-            onChange={(e) => setInputSex(e.target.value)}
-            placeholder="Sex"
-            required
-
-          />
-          <input
-            className={styles.signUpFormField}
+            className={"signUpFormField"}
             type="password"
             value={inputPassword}
             onChange={(e) => setInputPassword(e.target.value)}
             placeholder="Password"
             required
-
+          />
+          <select
+            className={`w-full ${"signUpFormField"}`}
+            value={inputSex}
+            onChange={(e) => setInputSex(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Select Sex
+            </option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="O">Other</option>
+          </select>
+          <BirthdayPicker
+            value={inputBirthday}
+            onChange={(dateString) => setInputBirthday(dateString)}
+            className={"signUpFormField"}
           />
           {error && <div style={{ color: "red" }}>{error.message}</div>}
           {success && <div style={{ color: "green" }}>Sign up successful!</div>}

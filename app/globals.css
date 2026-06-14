@@ -80,3 +80,9 @@ body {
   min-width: 100vw;
   min-height: 100vh;
 }
+
+.signUpFormField {
+  border: 2px solid var(--text-color);
+  border-radius: 1rem;
+  padding: 1rem;
+}

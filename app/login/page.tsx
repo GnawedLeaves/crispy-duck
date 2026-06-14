@@ -6,16 +6,10 @@ import { getUserContext } from "../utils/login/authUtils";
 import SignOutForm from "./components/signOutForm";
 
 const LoginPage = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  const { user, isLoggedIn } = await getUserContext();
-
   return (
     <div className="contentLayout">
       LOGGED IN USER ID:
       <br />
-      {user?.id}
       <br />
       <div>
         <SignUpForm />

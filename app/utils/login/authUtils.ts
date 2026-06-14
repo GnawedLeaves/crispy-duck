@@ -1,8 +1,5 @@
 "use server";
-import {
-  UserContext,
-  UserProfile
-} from "@/app/types/authTypes";
+import { UserContext, UserProfile } from "@/app/types/authTypes";
 import { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "../supabase/server";
@@ -10,11 +7,15 @@ import { createClient } from "../supabase/server";
 export const signUpAction = async ({
   email,
   password,
-  username,
+  display_name,
+  birthday,
+  sex,
 }: {
   email: string;
   password: string;
-  username: string;
+  display_name: string;
+  birthday: string;
+  sex: string;
 }) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
@@ -36,7 +37,12 @@ export const signUpAction = async ({
   }
 
   if (data.user?.id) {
-    const profileResult = await createUserProfile(data.user.id, username);
+    const profileResult = await createUserProfile(
+      data.user.id,
+      display_name,
+      birthday,
+      sex,
+    );
 
     if (profileResult.error) {
       return {
@@ -72,7 +78,7 @@ export const loginActionWithEmail = async (email: string, password: string) => {
   };
 };
 
-const getUserProfile = async (user: User): Promise<UserProfile | undefined> => {
+const getUserProfile = async (user: User): Promise<UserProfile> => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const { data: profile, error: profileError } = await supabase
@@ -81,7 +87,7 @@ const getUserProfile = async (user: User): Promise<UserProfile | undefined> => {
     .eq("id", user.id)
     .single();
 
-  return profile as UserProfile | undefined;
+  return profile as UserProfile;
 };
 
 export const getUserContext = async (): Promise<UserContext> => {
@@ -91,7 +97,6 @@ export const getUserContext = async (): Promise<UserContext> => {
   const {
     data: { user },
     error,
-
   } = await supabase.auth.getUser();
 
   if (error || !user) {
@@ -109,7 +114,9 @@ export const getUserContext = async (): Promise<UserContext> => {
 
 export const createUserProfile = async (
   userId: string,
-  username: string,
+  display_name: string,
+  birthday: string,
+  sex: string,
   // displayName: string,
 ) => {
   const cookieStore = await cookies();
@@ -118,7 +125,9 @@ export const createUserProfile = async (
   const { data, error } = await supabase.from("profiles").insert([
     {
       id: userId,
-      username,
+      display_name,
+      birthday,
+      sex,
       // display_name: displayName,
     },
   ]);

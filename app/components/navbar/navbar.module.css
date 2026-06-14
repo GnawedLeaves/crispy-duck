@@ -10,3 +10,14 @@
   /* border-radius: 8px; */
   background-color: #ffffff;
 }
+
+.selectedNavItem {
+  background: var(--primary-color);
+  border-radius: 50%;
+  padding: 0.4rem;
+}
+
+.unselectedNavItem {
+  border-radius: 50%;
+  padding: 0.4rem;
+}

@@ -1,12 +1,7 @@
 "use client";
 
-import { AuthError } from "@supabase/supabase-js";
 import { useState } from "react";
-import styles from "./styles.module.css";
-import {
-  loginActionWithEmail,
-  signUpAction,
-} from "@/app/utils/login/authUtils";
+import { loginActionWithEmail } from "@/app/utils/login/authUtils";
 import { useRouter } from "next/navigation";
 
 interface LoginFormError {
@@ -48,14 +43,14 @@ const SignInForm = ({}: {}) => {
       <form onSubmit={handleSubmit}>
         <div className="flex gap-5 flex-col">
           <input
-            className={styles.signUpFormField}
+            className={"signUpFormField"}
             type="email"
             value={inputEmail}
             onChange={(e) => setInputEmail(e.target.value)}
             placeholder="Email"
           />
           <input
-            className={styles.signUpFormField}
+            className={"signUpFormField"}
             type="password"
             value={inputPassword}
             onChange={(e) => setInputPassword(e.target.value)}

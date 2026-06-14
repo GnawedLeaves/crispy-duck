@@ -19,16 +19,17 @@ export interface UserProfile {
   id: string;
   username: string;
   display_name: string;
-  avatar_url?: string;
+  avatar_url: string;
   bio?: string;
   created_at: string;
   updated_at: string;
-  sex?: string;
+  birthday: string;
+  sex?: "M" | "F" | "NA";
 }
 
 //main User type
 export interface ExtendedUser extends User {
-  profile?: UserProfile;
+  profile: UserProfile;
   isLoggedIn: boolean;
 }
 

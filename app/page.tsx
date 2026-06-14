@@ -5,11 +5,11 @@ import SignOutForm from "./login/components/signOutForm";
 export default function Home() {
   return (
     <div className={"contentLayout"}>
-      <div>Dashboard</div>
+      dashboard
       <div>
         <ProfileBanner />
       </div>
-      <SignOutForm />
+      {/* <SignOutForm /> */}
     </div>
   );
 }
