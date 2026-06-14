@@ -2,6 +2,7 @@
 
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { createClient } from "@/app/utils/supabase/server";
+import { User } from "@supabase/supabase-js";
 import dayjs from "dayjs";
 import { cookies } from "next/headers";
 export interface ProcessScanResponse {
@@ -99,4 +100,39 @@ export const uploadScanData = async (
   ]);
 
   return { data, error };
+};
+
+export const getUserTanitaScans = async () => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { message: "Unauthorized access.", code: "401" },
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("tanita_scans")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("scan_date", { ascending: false }); // Optional: nicely sorts latest scans first!
+
+  if (error) {
+    return {
+      data: null,
+      error: {
+        message: error.message,
+        code: error.code,
+      },
+    };
+  }
+
+  return { data, error: null };
 };

@@ -3,7 +3,12 @@
 import ProgressBarStatItem from "./progressBarStatItem";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
 
-const CurrentStatsComponent = () => {
+interface CurrentStatsComponentProps {
+  //todo change
+  data: any;
+}
+const CurrentStatsComponent = ({ data }: CurrentStatsComponentProps) => {
+  console.log({ data });
   const chartdata = [
     {
       date: "Jan 23",
@@ -70,6 +75,7 @@ const CurrentStatsComponent = () => {
   return (
     <div className="cardWithShadow">
       <div className="text-xl font-bold">Current Stats</div>
+      <div>TOTAL SCANS: {data?.length}</div>
       <div className="flex flex-col gap-4">
         <ProgressBarStatItem
           title="Fat Percentage"
