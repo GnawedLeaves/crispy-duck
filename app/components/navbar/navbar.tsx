@@ -1,6 +1,6 @@
-import styles from "./navbar.module.css";
 import { token } from "@/app/theme";
 import Link from "next/link";
+import styles from "./navbar.module.css";
 const Navbar = () => {
   return (
     <div className="fixed w-full h-fit px-2 py-6 bottom-0 flex items-center justify-center">
@@ -14,14 +14,18 @@ const Navbar = () => {
         <div className={styles.navbarItem}>
           <Link href={"/"}>Home</Link>
         </div>
-        <div className={styles.navbarItem}>
-          <Link href={"/scan"}>Scan</Link>
-        </div>
+
         <div className={styles.navbarItem}>
           <Link href={"/stats"}>Stats</Link>
         </div>
         <div className={styles.navbarItem}>
+          <Link href={"/scan"}>Scan</Link>
+        </div>
+        <div className={styles.navbarItem}>
           <Link href={"/friends"}>Friends</Link>
+        </div>
+        <div className={styles.navbarItem}>
+          <Link href={"/profile"}>Profile</Link>
         </div>
       </div>
     </div>
