@@ -8,7 +8,7 @@ interface CustomModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  onActionClick?: () => void;
+  onActionClick?: () => any;
   actionButtonText?: string;
   closeButtonText?: string;
 
@@ -43,7 +43,7 @@ const CustomModal = ({
         className="modal-box cardWithShadow"
         style={{ background: token.light.background }}
       >
-        <h3 className="font-bold text-lg">{title}</h3>
+        <h2 className="font-bold text-2xl">{title}</h2>
         <div className="py-2">{children}</div>
 
         <div className="modal-action">

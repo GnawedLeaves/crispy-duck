@@ -1,5 +1,6 @@
 "use client";
 
+import { token } from "@/app/theme";
 import { useState, useEffect } from "react";
 
 interface BirthdayPickerProps {
@@ -13,15 +14,36 @@ export const BirthdayPicker = ({
   onChange,
   className,
 }: BirthdayPickerProps) => {
-  const initialYear = value ? value.split("-")[0] : "";
-  const initialMonth = value ? value.split("-")[1] : "";
-  const initialDay = value ? value.split("-")[2] : "";
+  const [year, setYear] = useState("");
+  const [month, setMonth] = useState("");
+  const [day, setDay] = useState("");
 
-  const [year, setYear] = useState(initialYear);
-  const [month, setMonth] = useState(initialMonth);
-  const [day, setDay] = useState(initialDay);
+  useEffect(() => {
+    if (value && value.includes("-")) {
+      const parts = value.split("-");
+      setYear(parts[0] || "");
+      setMonth(parts[1] || "");
+      setDay(parts[2] || "");
+    } else if (!value) {
+      setYear("");
+      setMonth("");
+      setDay("");
+    }
+  }, [value]);
 
-  // Generate Year range (Current Year down to 100 years ago)
+  const handleSelectChange = (
+    newYear: string,
+    newMonth: string,
+    newDay: string,
+  ) => {
+    if (newYear && newMonth && newDay) {
+      onChange(`${newYear}-${newMonth}-${newDay}`);
+    } else {
+      onChange("");
+    }
+  };
+
+  // Generate Year range
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) =>
     (currentYear - i).toString(),
@@ -43,7 +65,6 @@ export const BirthdayPicker = ({
     { value: "12", name: "December" },
   ];
 
-  // Dynamically calculate days in selected month/year (handles leap years!)
   const getDaysInMonth = (m: string, y: string) => {
     if (!m) return 31;
     const days = new Date(y ? parseInt(y) : 2000, parseInt(m), 0).getDate();
@@ -55,15 +76,6 @@ export const BirthdayPicker = ({
     (i + 1).toString().padStart(2, "0"),
   );
 
-  // Whenever dropdown choices change, push the combined format back up to the form parent
-  useEffect(() => {
-    if (year && month && day) {
-      onChange(`${year}-${month}-${day}`);
-    } else {
-      onChange(""); // Keep empty if incomplete
-    }
-  }, [year, month, day, onChange]);
-
   return (
     <div className="flex flex-col gap-1 w-full">
       <span className="text-sm font-semibold opacity-70 px-1">Birthday</span>
@@ -71,8 +83,13 @@ export const BirthdayPicker = ({
         {/* Month Selector */}
         <select
           className={`select select-bordered w-full ${className}`}
+          style={{ background: token.light.background }}
           value={month}
-          onChange={(e) => setMonth(e.target.value)}
+          onChange={(e) => {
+            const nextMonth = e.target.value;
+            setMonth(nextMonth);
+            handleSelectChange(year, nextMonth, day);
+          }}
           required
         >
           <option value="" disabled>
@@ -88,10 +105,15 @@ export const BirthdayPicker = ({
         {/* Day Selector */}
         <select
           className={`select select-bordered w-full ${className}`}
+          style={{ background: token.light.background }}
           value={day}
-          onChange={(e) => setDay(e.target.value)}
+          onChange={(e) => {
+            const nextDay = e.target.value;
+            setDay(nextDay);
+            handleSelectChange(year, month, nextDay);
+          }}
           required
-          disabled={!month} // Block day choice until month is picked
+          disabled={!month}
         >
           <option value="" disabled>
             Day
@@ -106,8 +128,13 @@ export const BirthdayPicker = ({
         {/* Year Selector */}
         <select
           className={`select select-bordered w-full ${className}`}
+          style={{ background: token.light.background }}
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => {
+            const nextYear = e.target.value;
+            setYear(nextYear);
+            handleSelectChange(nextYear, month, day);
+          }}
           required
         >
           <option value="" disabled>

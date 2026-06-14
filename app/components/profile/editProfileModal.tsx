@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // 1. Imported useRef
 import { UserContext } from "@/app/types/authTypes";
 import CustomModal from "../modal/customModal";
 import Image from "next/image";
+import { BirthdayPicker } from "../birthdayPicker/BirthdayPicker";
+import { updateUserProfile } from "@/app/utils/login/authUtils";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface EditProfileProps {
   isOpen: boolean;
@@ -16,33 +19,62 @@ const EditProfileModal = ({
   onClose,
   existingUser,
 }: EditProfileProps) => {
-  const [username, setUsername] = useState("");
+  const { refreshUser } = useAuth();
+
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [sex, setSex] = useState("NA");
+  const [birthday, setBirthday] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && existingUser?.profile) {
-      setUsername(existingUser.profile.username || "");
+      setDisplayName(existingUser.profile.display_name || "");
       setBio(existingUser.profile.bio || "");
-      setSex(existingUser.profile.sex || "");
+      setSex(existingUser.profile.sex || "NA");
+      setBirthday(existingUser.profile.birthday || "");
     }
   }, [isOpen, existingUser]);
 
-  // 3. Handle Form Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // Your Supabase update logic will go here
-      console.log("Submitting updated profile:", { username, bio, sex });
+    if (!existingUser?.id) return;
 
-      // Close modal on success
-      onClose();
-    } catch (error) {
-      console.error("Failed to update profile", error);
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+      const { error } = await updateUserProfile({
+        userId: existingUser.id,
+        display_name: displayName,
+        bio,
+        sex,
+        birthday,
+      });
+
+      if (error) {
+        setFormError(error.message);
+      } else {
+        await refreshUser();
+        onClose();
+      }
+    } catch (err) {
+      setFormError("An unexpected error occurred while saving.");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleModalActionClick = () => {};
+  const handleModalActionClick = () => {
+    if (submitButtonRef.current) {
+      submitButtonRef.current.click();
+    }
+  };
+
   return (
     <CustomModal
       isOpen={isOpen}
@@ -50,12 +82,12 @@ const EditProfileModal = ({
       title={"Edit Profile"}
       modalType="action"
       closeButtonText="Cancel"
-      actionButtonText="Save"
+      actionButtonText={isSubmitting ? "Saving..." : "Save"}
       onActionClick={handleModalActionClick}
     >
       <form
         onSubmit={handleSubmit}
-        className="flexCenter flex-col gap-4  p-4 rounded-xl"
+        className="flexCenter flex-col gap-4 p-4 rounded-xl"
       >
         {existingUser?.profile?.avatar_url && (
           <Image
@@ -71,9 +103,9 @@ const EditProfileModal = ({
           type="text"
           placeholder="Username"
           className="signUpFormField w-full"
-          maxLength={30}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          maxLength={15}
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
           required
         />
 
@@ -81,6 +113,7 @@ const EditProfileModal = ({
           placeholder="Bio"
           className="signUpFormField w-full text-black"
           value={bio}
+          maxLength={30}
           onChange={(e) => setBio(e.target.value)}
         />
 
@@ -97,7 +130,22 @@ const EditProfileModal = ({
           <option value="F">Female</option>
           <option value="NA">Prefer not to say</option>
         </select>
-        <button></button>
+
+        <BirthdayPicker
+          value={birthday}
+          onChange={(dateString) => setBirthday(dateString)}
+          className={"signUpFormField"}
+        />
+
+        {formError && (
+          <div className="text-red-500 text-sm mt-2">{formError}</div>
+        )}
+
+        <button
+          type="submit"
+          ref={submitButtonRef}
+          style={{ display: "none" }}
+        />
       </form>
     </CustomModal>
   );

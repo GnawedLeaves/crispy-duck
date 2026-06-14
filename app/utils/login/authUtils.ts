@@ -3,7 +3,13 @@ import { UserContext, UserProfile } from "@/app/types/authTypes";
 import { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "../supabase/server";
-
+export interface UpdateProfilePayload {
+  userId: string;
+  display_name: string;
+  bio: string;
+  sex: string;
+  birthday: string;
+}
 export const signUpAction = async ({
   email,
   password,
@@ -111,7 +117,38 @@ export const getUserContext = async (): Promise<UserContext> => {
     isLoggedIn: true,
   };
 };
+export const updateUserProfile = async ({
+  userId,
+  display_name,
+  bio,
+  sex,
+  birthday,
+}: UpdateProfilePayload) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
 
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      display_name,
+      bio,
+      sex,
+      birthday,
+    })
+    .eq("id", userId);
+
+  if (error) {
+    return {
+      data: null,
+      error: {
+        message: error.message,
+        code: error.code,
+      },
+    };
+  }
+
+  return { data, error: null };
+};
 export const createUserProfile = async (
   userId: string,
   display_name: string,

@@ -17,9 +17,9 @@ const LoginPage = async () => {
       <div>
         <SignInForm />
       </div>
-      <div>
+      {/* <div>
         <SignOutForm />
-      </div>
+      </div> */}
     </div>
   );
 };
