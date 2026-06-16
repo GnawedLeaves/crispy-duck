@@ -15,7 +15,6 @@ export default async function Home() {
 
   return (
     <div className={"contentLayout"}>
-      dashboard
       <div>
         <ProfileBanner />
       </div>

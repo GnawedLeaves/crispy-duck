@@ -107,7 +107,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     return (
       <div className="flexCenter flex-col gap-4">
         <div className="cardWithShadow text-center flex flex-col gap-3 px-8 py-6">
-          <p className="font-semibold">✅ Scan saved!</p>
+          <p className="font-semibold">Scan saved!</p>
           <p className="text-sm opacity-60">
             Your body composition data has been recorded.
           </p>

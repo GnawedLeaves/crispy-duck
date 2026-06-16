@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { startTransition, useState, ViewTransition } from "react";
 import { loginActionWithEmail } from "@/app/utils/login/authUtils";
 import { useRouter } from "next/navigation";
 import ButtonBar from "./buttonBar";
@@ -21,9 +21,11 @@ const SignInForm = ({ setPageState }: SignInFormProps) => {
   const [inputPassword, setInputPassword] = useState<string>("");
   const [error, setError] = useState<LoginFormError | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.SubmitEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     setError(null);
 
@@ -38,42 +40,59 @@ const SignInForm = ({ setPageState }: SignInFormProps) => {
       setSuccess(true);
       setInputEmail("");
       setInputPassword("");
-      router.push("/");
+      startTransition(() => {
+        router.push("/");
+      });
     }
+    setIsLoading(false);
   };
   return (
-    <div className="contentLayout flexCenter flex-col">
-      <ButtonBar
-        prevButtonOnClick={() => {
-          setPageState("landing");
-        }}
-      />
+    <ViewTransition>
+      <div className="contentLayout flexCenter flex-col">
+        <ButtonBar
+          showPrevButton={!isLoading}
+          prevButtonOnClick={() => {
+            setPageState("landing");
+          }}
+        />
 
-      <div className="text-5xl font-bold my-10 text-center"> Welcome Back!</div>
-      <form onSubmit={handleSubmit}>
-        <div className="flex gap-5 flex-col">
-          <input
-            className={"signUpFormField"}
-            type="email"
-            value={inputEmail}
-            onChange={(e) => setInputEmail(e.target.value)}
-            placeholder="Email"
-          />
-          <input
-            className={"signUpFormField"}
-            type="password"
-            value={inputPassword}
-            onChange={(e) => setInputPassword(e.target.value)}
-            placeholder="Password"
-          />
-          {error && <div style={{ color: "red" }}>{error.message}</div>}
-          {success && <div style={{ color: "green" }}>Log In successful!</div>}
-          <button className="standardButton bg-amber-400!" type="submit">
-            Log In
-          </button>
+        <div className="text-5xl font-bold my-10 text-center">
+          {" "}
+          Welcome Back!
         </div>
-      </form>
-    </div>
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-5 flex-col">
+            <input
+              className={"signUpFormField"}
+              type="email"
+              value={inputEmail}
+              onChange={(e) => setInputEmail(e.target.value)}
+              placeholder="Email"
+            />
+            <input
+              className={"signUpFormField"}
+              type="password"
+              value={inputPassword}
+              onChange={(e) => setInputPassword(e.target.value)}
+              placeholder="Password"
+            />
+            {error && <div style={{ color: "red" }}>{error.message}</div>}
+            {success && (
+              <div style={{ color: "green" }}>Log In successful!</div>
+            )}
+            <button className="standardButton bg-amber-400!" type="submit">
+              {isLoading ? (
+                <div className="flex gap-3 align-center justify-center">
+                  <span className="loading loading-spinner"></span>
+                </div>
+              ) : (
+                "Log In"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </ViewTransition>
   );
 };
 

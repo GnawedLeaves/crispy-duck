@@ -1,108 +1,96 @@
 "use client";
 
+import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
 import ProgressBarStatItem from "./progressBarStatItem";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
 
 interface CurrentStatsComponentProps {
-  //todo change
-  data: any;
+  trendData: BodyScanDataPoint[];
 }
-const CurrentStatsComponent = ({ data }: CurrentStatsComponentProps) => {
-  console.log({ data });
-  const chartdata = [
+
+type DataKey = "Total Weight" | "Fat Percentage" | "Muscle Mass" | "Fat Mass";
+
+function getAxisRange(
+  data: BodyScanDataPoint[],
+  key: DataKey,
+  paddingPct = 0.05,
+) {
+  const values = data.map((d) => d[key]).filter(Boolean);
+  if (!values.length) return {};
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const padding = (max - min) * paddingPct;
+  return {
+    minValue: Math.floor(min - padding),
+    maxValue: Math.ceil(max + padding),
+  };
+}
+
+const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
+  const latestScan = trendData?.[trendData.length - 1];
+
+  const charts: {
+    label: string;
+    key: DataKey;
+    formatter: (n: number) => string;
+  }[] = [
     {
-      date: "Jan 23",
-      SolarPanels: 2890,
-      Inverters: 2338,
+      label: "Total Weight (kg)",
+      key: "Total Weight",
+      formatter: (n) => `${n} kg`,
     },
     {
-      date: "Feb 23",
-      SolarPanels: 2756,
-      Inverters: 2103,
+      label: "Fat Percentage (%)",
+      key: "Fat Percentage",
+      formatter: (n) => `${n}%`,
     },
     {
-      date: "Mar 23",
-      SolarPanels: 3322,
-      Inverters: 2194,
+      label: "Muscle Mass (kg)",
+      key: "Muscle Mass",
+      formatter: (n) => `${n} kg`,
     },
-    {
-      date: "Apr 23",
-      SolarPanels: 3470,
-      Inverters: 2108,
-    },
-    {
-      date: "May 23",
-      SolarPanels: 3475,
-      Inverters: 1812,
-    },
-    {
-      date: "Jun 23",
-      SolarPanels: 3129,
-      Inverters: 1726,
-    },
-    {
-      date: "Jul 23",
-      SolarPanels: 3490,
-      Inverters: 1982,
-    },
-    {
-      date: "Aug 23",
-      SolarPanels: 2903,
-      Inverters: 2012,
-    },
-    {
-      date: "Sep 23",
-      SolarPanels: 2643,
-      Inverters: 2342,
-    },
-    {
-      date: "Oct 23",
-      SolarPanels: 2837,
-      Inverters: 2473,
-    },
-    {
-      date: "Nov 23",
-      SolarPanels: 2954,
-      Inverters: 3848,
-    },
-    {
-      date: "Dec 23",
-      SolarPanels: 3239,
-      Inverters: 3736,
-    },
+    { label: "Fat Mass (kg)", key: "Fat Mass", formatter: (n) => `${n} kg` },
   ];
 
   return (
     <div className="cardWithShadow">
       <div className="text-xl font-bold">Current Stats</div>
-      <div>TOTAL SCANS: {data?.length}</div>
+      <div>TOTAL SCANS: {trendData?.length}</div>
+
       <div className="flex flex-col gap-4">
         <ProgressBarStatItem
           title="Fat Percentage"
-          progressPercentage={31}
-          progressString="31%"
+          progressPercentage={latestScan?.["Fat Percentage"] ?? 0}
+          progressString={`${latestScan?.["Fat Percentage"] ?? "--"}%`}
         />
         <ProgressBarStatItem
-          title="TBW"
-          progressPercentage={52}
-          progressString="52%"
+          title="Muscle Mass"
+          progressPercentage={latestScan?.["Muscle Mass"] ?? 0}
+          progressString={`${latestScan?.["Muscle Mass"] ?? "--"} kg`}
         />
         <ProgressBarStatItem
-          title="Degree of obesity"
-          progressPercentage={71}
-          progressString="71%"
+          title="Fat Mass"
+          progressPercentage={latestScan?.["Fat Mass"] ?? 0}
+          progressString={`${latestScan?.["Fat Mass"] ?? "--"} kg`}
         />
       </div>
-      <LineChart
-        className="h-80"
-        data={chartdata}
-        index="date"
-        categories={["SolarPanels", "Inverters"]}
-        valueFormatter={(number: number) =>
-          `$${Intl.NumberFormat("us").format(number).toString()}`
-        }
-        onValueChange={(v: any) => console.log(v)}
-      />
+
+      <div className="flex flex-col gap-6 mt-6">
+        {charts.map(({ label, key, formatter }) => (
+          <div key={key}>
+            <div className="text-2xl font-semibold mb-1">{label}</div>
+            <LineChart
+              className="h-48"
+              data={trendData}
+              index="date"
+              categories={[key]}
+              valueFormatter={formatter}
+              onValueChange={(v: any) => console.log(v)}
+              {...getAxisRange(trendData, key)}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

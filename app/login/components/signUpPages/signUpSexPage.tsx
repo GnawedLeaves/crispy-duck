@@ -1,4 +1,5 @@
 "use client";
+import { token } from "@/app/theme";
 import { withDelay } from "@/app/utils/common";
 import { startTransition } from "react";
 
@@ -48,7 +49,8 @@ const SignUpSexPage = ({
           )}
 
           <button
-            className="standardButton bg-amber-400!"
+            className="standardButton "
+            style={{ background: token.light.blueColor }}
             type="submit"
             disabled={isLoading}
           >
