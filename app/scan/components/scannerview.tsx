@@ -216,7 +216,14 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
           )
         )}
 
-        {loading && <span className="loading loading-spinner loading-md" />}
+        {loading && (
+          <div className="flex flex-col gap-2">
+            <span className="loading loading-spinner loading-md" />
+            <div>
+              This may take a while, do not move from this screen. if not gg
+            </div>
+          </div>
+        )}
 
         {scanError && (
           <div className="cardWithShadow flex flex-col gap-3 text-center max-w-xs">
