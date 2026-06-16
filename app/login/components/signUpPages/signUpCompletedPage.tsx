@@ -1,4 +1,5 @@
 "use client";
+import { token } from "@/app/theme";
 import { withDelay } from "@/app/utils/common";
 import { startTransition } from "react";
 
@@ -7,8 +8,7 @@ interface SignUpCompletedPageProps {
 }
 
 const SignUpCompletedPage = ({ onContinueClick }: SignUpCompletedPageProps) => {
-  const handleOnDisplayNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleOnCompleteClick = () => {
     withDelay(() => {
       startTransition(() => {
         onContinueClick();
@@ -16,16 +16,18 @@ const SignUpCompletedPage = ({ onContinueClick }: SignUpCompletedPageProps) => {
     })();
   };
   return (
-    <div className="contentLayout flexCenter flex-col">
-      <form onSubmit={handleOnDisplayNameSubmit}>
-        <div className="flex gap-5 flex-col">
-          <div className="text-3xl">Your profile has been created</div>
+    <div
+      className="contentLayout flexCenter flex-col"
+      style={{ background: token.light.primaryColor }}
+    >
+      <div className="flex gap-5 flex-col">
+        <div className="text-5xl text-center">Success!</div>
+        <div className="text-xl text-center">Your profile has been created</div>
 
-          <button className="standardButton bg-amber-400!" type="submit">
-            Let's go!
-          </button>
-        </div>
-      </form>
+        <button className="standardButton " onClick={handleOnCompleteClick}>
+          Let's go
+        </button>
+      </div>
     </div>
   );
 };

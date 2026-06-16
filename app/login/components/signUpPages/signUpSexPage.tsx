@@ -6,12 +6,16 @@ interface SignUpSexPageProps {
   inputSex: string;
   setInputSex: React.Dispatch<React.SetStateAction<string>>;
   onContinueClick: () => void;
+  isLoading: boolean;
+  errorMessage: string | null;
 }
 
 const SignUpSexPage = ({
   inputSex,
   setInputSex,
   onContinueClick,
+  isLoading,
+  errorMessage,
 }: SignUpSexPageProps) => {
   const handleOnDisplayNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,9 +43,23 @@ const SignUpSexPage = ({
             <option value="F">Female</option>
             <option value="O">Other</option>
           </select>
+          {errorMessage && (
+            <p className="text-red-500 text-sm text-center">{errorMessage}</p>
+          )}
 
-          <button className="standardButton bg-amber-400!" type="submit">
-            Finish
+          <button
+            className="standardButton bg-amber-400!"
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex gap-3 align-center justify-center">
+                <span className="loading loading-spinner"></span>
+                Creating profile...
+              </div>
+            ) : (
+              "Finish"
+            )}
           </button>
         </div>
       </form>
