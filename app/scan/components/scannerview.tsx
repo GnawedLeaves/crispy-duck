@@ -75,6 +75,10 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         { type: "image/jpeg" },
       );
     }
+    setInputFile(file);
+    setScanError(null);
+    const base64 = await fileToBase64(file);
+    setImagePreview(base64);
   };
 
   const handleConfirmUpload = withDelay(async () => {
