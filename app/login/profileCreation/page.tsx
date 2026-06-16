@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ViewTransition } from "react";
+import { useEffect, useState, ViewTransition } from "react";
 import ButtonBar from "../components/buttonBar";
 import StepsBar from "../components/stepsBar";
 import SignUpDisplayNamePage from "../components/signUpPages/signUpDisplayNamePage";
@@ -13,6 +13,7 @@ import { createProfileAction } from "@/app/utils/login/authUtils";
 const MAX_PAGE_NUM = 4;
 const MIN_PAGE_NUM = 1;
 const ProfileCreationPage = () => {
+  const { user, refreshUser, isLoading: isAuthLoading } = useAuth();
   const [profileCreationStateNum, setProfileCreationStateNum] =
     useState<number>(MIN_PAGE_NUM);
   const [inputDisplayName, setInputDisplayName] = useState<string>("");
@@ -21,6 +22,12 @@ const ProfileCreationPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthLoading && user && user.profile) {
+      router.push("/");
+    }
+  }, [user, isAuthLoading, router]);
 
   const handleIncreasePageNumber = () => {
     if (profileCreationStateNum + 1 > MAX_PAGE_NUM) {

@@ -12,14 +12,15 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  redirect("/stats");
 
   return (
     <div className={"contentLayout"}>
       <div>
         <ProfileBanner />
       </div>
-      For emergency:
-      <SignOutForm />
+      {/* For emergency:
+      <SignOutForm /> */}
     </div>
   );
 }

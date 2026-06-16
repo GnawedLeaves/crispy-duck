@@ -1,7 +1,12 @@
-import React from "react";
+import ProfileBanner from "../components/profile/profileBanner";
 
 const FriendPage = () => {
-  return <div className="contentLayout">FriendPage</div>;
+  return (
+    <div className="contentLayout">
+      <ProfileBanner />
+      <div>Friends go here</div>
+    </div>
+  );
 };
 
 export default FriendPage;

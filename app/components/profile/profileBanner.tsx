@@ -8,15 +8,21 @@ import { useEffect, useState } from "react";
 import EditProfileModal from "./editProfileModal";
 import { withDelay } from "@/app/utils/common";
 import { signOutAction } from "@/app/utils/login/authUtils";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import CustomModal from "../modal/customModal";
 
 const ProfileBanner = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (!isLoading && user && !user.profile) {
+      router.push("/login/profileCreation");
+    }
+  }, [user, isLoading, router]);
+
   useEffect(() => {
     refreshUser();
   }, []);
-  const router = useRouter();
 
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] =
     useState<boolean>(false);

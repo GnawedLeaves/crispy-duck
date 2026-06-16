@@ -14,7 +14,7 @@ const StepsBar = ({
   const items = Array.from({ length: totalSegments });
   if (showWholeBar) {
     return (
-      <div className="w-full h-4 p-1 flex gap-1 fixed left-0 bottom-0">
+      <div className="w-full h-4 py-1 px-8 flex gap-3 fixed left-0 top-6">
         {items.map((item, index) => {
           return (
             <div

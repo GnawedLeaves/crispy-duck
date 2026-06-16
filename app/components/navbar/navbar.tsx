@@ -26,13 +26,13 @@ const Navbar = () => {
             borderColor: token.light.borderColor,
           }}
         >
-          <div
+          {/* <div
             className={`${styles.navbarItem}  ${isActive("/") ? styles.selectedNavItem : styles.unselectedNavItem}`}
           >
             <Link href={"/"}>
               <House />
             </Link>
-          </div>
+          </div> */}
 
           <div
             className={`${styles.navbarItem} ${isActive("/stats") ? styles.selectedNavItem : styles.unselectedNavItem}`}

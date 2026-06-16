@@ -3,7 +3,7 @@
 import { parseTautaScan, withDelay } from "@/app/utils/common";
 import { ProcessScanResponse } from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, ViewTransition } from "react";
 
 interface ScanFormProps {
   handleFileUpload: (file: File) => Promise<ProcessScanResponse | undefined>;
