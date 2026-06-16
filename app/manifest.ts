@@ -27,14 +27,14 @@ export default function manifest(): MetadataRoute.Manifest {
     screenshots: [
       {
         src: "/screenshot-mobile.png",
-        sizes: "750x1334", // Replace with your actual mobile screenshot dimensions
+        sizes: "1178x2560", // Replace with your actual mobile screenshot dimensions
         type: "image/png",
         form_factor: "narrow", // Targets mobile layout
         label: "Crispy Duck on Mobile",
       },
       {
         src: "/screenshot-desktop.png",
-        sizes: "1920x1080", // Replace with your actual desktop screenshot dimensions
+        sizes: "2560x1274", // Replace with your actual desktop screenshot dimensions
         type: "image/png",
         form_factor: "wide", // Targets desktop layout
         label: "Crispy Duck on Desktop",
