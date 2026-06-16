@@ -4,9 +4,10 @@ import { ITautaScanData } from "@/app/types/commonTypes";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
 import { ProcessScanResponse } from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
 import Link from "next/link";
+import { token } from "@/app/theme";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
@@ -139,7 +140,13 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         imagePreview={imagePreview}
         initialData={scanData}
         currentUserId={currentUserId}
-        onSuccess={() => setStep("success")}
+        onSuccess={() => {
+          setInputFile(null);
+          setImagePreview(null);
+          setRawResult("");
+          setScanData(null);
+          setStep("success");
+        }}
         onBack={() => {
           setStep("scan");
           setInputFile(null);
@@ -153,58 +160,63 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
 
   // step === "scan"
   return (
-    <div className="flexCenter flex-col gap-4">
-      {imagePreview && (
-        <Image
-          alt="scan_preview_image"
-          width={200}
-          height={200}
-          src={imagePreview}
-          className="standardBorder"
-        />
-      )}
+    <ViewTransition>
+      <div className="flexCenter flex-col gap-4">
+        {imagePreview && (
+          <Image
+            alt="scan_preview_image"
+            width={200}
+            height={200}
+            src={imagePreview}
+            className="standardBorder"
+          />
+        )}
 
-      {inputFile && !loading ? (
-        <div className="flexCenter gap-4">
-          <button
-            className="standardButton bg-lime-200!"
-            onClick={handleConfirmUpload}
-          >
-            Scan
-          </button>
-          <button className="standardButton" onClick={handleReplaceImage}>
-            Replace
-          </button>
-        </div>
-      ) : (
-        !loading && (
-          <label className="standardButton cursor-pointer inline-block">
-            Add file
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
-        )
-      )}
+        {inputFile && !loading ? (
+          <div className="flexCenter gap-4">
+            <button
+              className="standardButton bg-lime-200!"
+              onClick={handleConfirmUpload}
+            >
+              Scan
+            </button>
+            <button className="standardButton" onClick={handleReplaceImage}>
+              Replace
+            </button>
+          </div>
+        ) : (
+          !loading && (
+            <label
+              className="standardButton cursor-pointer font-bold text-center w-50 h-50 text-5xl flexCenter"
+              style={{ background: token.light.blueColor }}
+            >
+              Add File
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          )
+        )}
 
-      {loading && <span className="loading loading-spinner loading-md" />}
+        {loading && <span className="loading loading-spinner loading-md" />}
 
-      {scanError && (
-        <div className="cardWithShadow flex flex-col gap-3 text-center max-w-xs">
-          <p className="text-sm font-semibold">⚠️ Couldn't read this image</p>
-          <p className="text-sm opacity-60">{scanError}</p>
-          <button
-            className="standardButton bg-red-100!"
-            onClick={handleReplaceImage}
-          >
-            Try a different image
-          </button>
-        </div>
-      )}
-    </div>
+        {scanError && (
+          <div className="cardWithShadow flex flex-col gap-3 text-center max-w-xs">
+            <p className="text-sm font-semibold">⚠️ Couldn't read this image</p>
+            <p className="text-sm opacity-60">{scanError}</p>
+            <button
+              className="standardButton bg-red-100!"
+              onClick={handleReplaceImage}
+            >
+              Try a different image
+            </button>
+          </div>
+        )}
+      </div>
+    </ViewTransition>
   );
 };
 

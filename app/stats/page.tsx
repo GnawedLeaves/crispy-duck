@@ -5,6 +5,7 @@ import ProfileBanner from "../components/profile/profileBanner";
 import CurrentStatsComponent from "./components/currentStats/currentStats";
 import { getUserTanitaScans } from "../utils/supabase/scanAction";
 import { getBodyScanData } from "../utils/supabase/getBodyScanDataAction";
+import { ViewTransition } from "react";
 
 const page = async () => {
   const cookieStore = await cookies();
@@ -15,13 +16,13 @@ const page = async () => {
 
   if (!user) redirect("/login");
 
-  const { data, error } = await getUserTanitaScans();
   const trendData = await getBodyScanData();
   return (
-    <div className="contentLayout">
-      <ProfileBanner />
-      <CurrentStatsComponent trendData={trendData} />
-    </div>
+    <ViewTransition>
+      <div className="contentLayout">
+        <CurrentStatsComponent trendData={trendData} />
+      </div>
+    </ViewTransition>
   );
 };
 

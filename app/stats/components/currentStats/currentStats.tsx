@@ -63,10 +63,16 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
   return (
     <div className="cardWithShadow">
       <div className="text-xl font-bold">Current Stats</div>
-      <div>TOTAL SCANS: {trendData?.length}</div>
-      <button className="standardButton" onClick={handlePushToScan}>
-        Start scanning
-      </button>
+
+      {trendData?.length > 0 && <div>TOTAL SCANS: {trendData?.length}</div>}
+      {trendData?.length < 1 && (
+        <div>
+          <div>You don't have any scans.</div>
+          <button className="standardButton" onClick={handlePushToScan}>
+            Start scanning
+          </button>
+        </div>
+      )}
 
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-4">

@@ -5,6 +5,7 @@ import { handleFileUpload } from "@/app/utils/supabase/scanAction";
 import { redirect } from "next/navigation";
 import ScannerView from "./components/scannerview";
 import ProfileBanner from "../components/profile/profileBanner";
+import { ViewTransition } from "react";
 
 export default async function ScanPage() {
   const cookieStore = await cookies();
@@ -16,12 +17,13 @@ export default async function ScanPage() {
   if (!user) redirect("/login");
 
   return (
-    <main className="contentLayout">
-      <ProfileBanner />
-      <ScannerView
-        handleFileUpload={handleFileUpload}
-        currentUserId={user.id}
-      />
-    </main>
+    <ViewTransition>
+      <main className="contentLayout">
+        <ScannerView
+          handleFileUpload={handleFileUpload}
+          currentUserId={user.id}
+        />
+      </main>
+    </ViewTransition>
   );
 }

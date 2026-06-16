@@ -31,11 +31,11 @@ export default async function SignUpPages({ params }: PageProps) {
           <div className="flex gap-4">
             <TransitionLink
               direction="backwards"
-              href={`/login/signUp/${currentPage - 1}`}
+              href={`/login/signUpTest/${currentPage - 1}`}
             >
               <button className="standardButton">Prev </button>
             </TransitionLink>
-            <TransitionLink href={`/login/signUp/${currentPage + 1}`}>
+            <TransitionLink href={`/login/signUpTest/${currentPage + 1}`}>
               <button className="standardButton">Next </button>
             </TransitionLink>
           </div>

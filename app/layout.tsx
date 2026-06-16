@@ -7,6 +7,7 @@ import { Josefin_Sans } from "next/font/google";
 import { token } from "./theme";
 import { Providers } from "./providers";
 import PWARegister from "./utils/pwa/pwa";
+import { ViewTransition } from "react";
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -53,7 +54,9 @@ export default function RootLayout({
       >
         <Providers>
           <PWARegister />
-          <Navbar />
+          <ViewTransition name="navbar-shell">
+            <Navbar />
+          </ViewTransition>
           {children}
         </Providers>
       </body>

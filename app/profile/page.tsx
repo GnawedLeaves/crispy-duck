@@ -7,7 +7,6 @@ import SignOutForm from "../login/components/signOutForm";
 const ProfilePage = () => {
   const { user, refreshUser } = useAuth();
 
-  console.log({ user });
   return (
     <div className="contentLayout">
       {user && user.profile && (
