@@ -6,6 +6,8 @@ interface ThemeToken {
     primaryColor: string;
     lighterBackground: string;
     redColor: string;
+    blueColor: string;
+    tempGrey: string;
   };
   dark: {
     background: string;
@@ -21,6 +23,8 @@ export const token: ThemeToken = {
     primaryColor: "#FFD913",
     lighterBackground: "#363636",
     redColor: "#F04B4B",
+    blueColor: "#70CDDE",
+    tempGrey: "#999999",
   },
   dark: {
     background: "#FFF2E9",

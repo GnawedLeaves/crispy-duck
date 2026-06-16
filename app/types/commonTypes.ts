@@ -50,3 +50,12 @@ export interface ITautaScanData {
   /** Total measured body weight before clothing deductions in kilograms (kg) */
   weight: number;
 }
+
+export type SignUpPageState =
+  | "email"
+  | "password"
+  | "displayName"
+  | "birthday "
+  | "sex";
+
+export type PageState = "landing" | "login" | "signUp";

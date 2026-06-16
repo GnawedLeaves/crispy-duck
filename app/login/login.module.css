@@ -1,0 +1,29 @@
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide {
+  from {
+    translate: var(--slide-distance);
+  }
+  to {
+    translate: 0;
+  }
+}
+/* Apply to browswer elements */
+::view-transition-new(.enter-right) {
+  --slide-distance: -60px;
+  animation: slide fade;
+}
+
+::view-transition-old(.exit-left) {
+  --slide-distance: -60px;
+  animation:
+    slide reverse,
+    fade reverse;
+}

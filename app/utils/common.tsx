@@ -1,8 +1,13 @@
 import { ITautaScanData } from "../types/commonTypes";
 
-export const withDelay = (callback: (arg: any) => void, ms: number = 300) => {
-  return () => {
-    setTimeout(callback, ms);
+export const withDelay = <T extends any[]>(
+  callback: (...args: T) => void,
+  ms: number = 300,
+) => {
+  // accept the arguments here using the rest operator (...args)
+  return (...args: T) => {
+    // pass those arguments into the callback inside setTimeout
+    setTimeout(() => callback(...args), ms);
   };
 };
 const mapping: Record<string, string> = {
