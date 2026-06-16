@@ -20,3 +20,18 @@ self.addEventListener("notificationclick", function (event) {
   event.notification.close();
   event.waitUntil(clients.openWindow("<https://your-website.com>"));
 });
+
+// Add an install event to skip waiting
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(clients.claim());
+});
+
+// Dummy fetch handler to satisfy PWA installation criteria
+self.addEventListener("fetch", (event) => {
+  // You can leave this empty or pass through the requests
+  event.respondWith(fetch(event.request));
+});

@@ -6,6 +6,7 @@ import Navbar from "./components/navbar/navbar";
 import { Josefin_Sans } from "next/font/google";
 import { token } from "./theme";
 import { Providers } from "./providers";
+import PWARegister from "./utils/pwa/pwa";
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -25,6 +26,7 @@ const josefinSans = Josefin_Sans({
 export const metadata: Metadata = {
   title: "Crispy Duck",
   description: "An app for you to store your body composition",
+  manifest: "/manifest.json",
 };
 
 const cssVariables = {
@@ -50,6 +52,7 @@ export default function RootLayout({
         style={cssVariables as React.CSSProperties}
       >
         <Providers>
+          <PWARegister />
           <Navbar />
           {children}
         </Providers>
