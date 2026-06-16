@@ -57,12 +57,23 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      setInputFile(file);
-      setScanError(null);
-      const base64 = await fileToBase64(file);
-      setImagePreview(base64);
+    if (!files?.length) return;
+
+    let file = files[0];
+
+    // Convert HEIC to JPEG for compatibility
+    if (file.type === "image/heic" || file.type === "image/heif") {
+      const heic2any = (await import("heic2any")).default;
+      const converted = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.8,
+      });
+      file = new File(
+        [converted as Blob],
+        file.name.replace(/\.heic$/i, ".jpeg"),
+        { type: "image/jpeg" },
+      );
     }
   };
 
