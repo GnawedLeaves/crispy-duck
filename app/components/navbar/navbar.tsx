@@ -16,7 +16,7 @@ const Navbar = () => {
   const { user } = useAuth();
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
-  if (user) {
+  if (user && !pathname.includes("/login")) {
     return (
       <div className="fixed w-full h-fit px-2 py-6 bottom-0 flex items-center justify-center z-10">
         <div

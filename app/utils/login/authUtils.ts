@@ -3,6 +3,7 @@ import { UserContext, UserProfile } from "@/app/types/authTypes";
 import { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "../supabase/server";
+
 export interface UpdateProfilePayload {
   userId: string;
   display_name: string;
@@ -10,6 +11,93 @@ export interface UpdateProfilePayload {
   sex: string;
   birthday: string;
 }
+
+// ---------------------------------------------------------------------------
+// STEP 1 — Create the Supabase auth account (email + password only)
+// Call this at the end of the email/password pages in the wizard.
+// ---------------------------------------------------------------------------
+export const createAccountAction = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data, error } = await supabase.auth.signUp({ email, password });
+
+  if (error) {
+    return {
+      data: null,
+      error: { message: error.message, code: error.code, status: error.status },
+    };
+  }
+
+  return { data, error: null };
+};
+
+// ---------------------------------------------------------------------------
+// STEP 2 — Create the user's profile row (display_name, birthday, sex, …)
+// Call this when the user completes the profile pages in the wizard.
+// The user is already authenticated at this point (session exists from step 1).
+//
+// If a user drops off mid-wizard, their profile row won't exist yet.
+// On next login, check `profile === null` and redirect them back to the
+// profile step (page 3 in your wizard).
+// ---------------------------------------------------------------------------
+export const createProfileAction = async ({
+  display_name,
+  birthday,
+  sex,
+}: {
+  display_name: string;
+  birthday: string;
+  sex: string;
+}) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  // Grab the currently authenticated user — no need to pass userId from the client
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return {
+      data: null,
+      error: {
+        message: "Not authenticated. Please sign in again.",
+        code: "NOT_AUTHENTICATED",
+      },
+    };
+  }
+
+  const { data, error } = await supabase.from("profiles").insert([
+    {
+      id: user.id,
+      display_name,
+      birthday,
+      sex,
+    },
+  ]);
+
+  if (error) {
+    return {
+      data: null,
+      error: { message: error.message, code: error.code },
+    };
+  }
+
+  return { data, error: null };
+};
+
+// ---------------------------------------------------------------------------
+// Kept for backwards compat — prefer createAccountAction + createProfileAction
+// ---------------------------------------------------------------------------
+/** @deprecated Use createAccountAction then createProfileAction instead */
 export const signUpAction = async ({
   email,
   password,
@@ -23,52 +111,30 @@ export const signUpAction = async ({
   birthday: string;
   sex: string;
 }) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
+  const accountResult = await createAccountAction({ email, password });
+  if (accountResult.error) return accountResult;
+
+  const profileResult = await createProfileAction({
+    display_name,
+    birthday,
+    sex,
   });
+  if (profileResult.error) return { data: null, error: profileResult.error };
 
-  // convert error to plain object (Error objects can't be serialized will cause error in console)
-  if (error) {
-    return {
-      data: null,
-      error: {
-        message: error.message,
-        code: error.code,
-        status: error.status,
-      },
-    };
-  }
-
-  if (data.user?.id) {
-    const profileResult = await createUserProfile(
-      data.user.id,
-      display_name,
-      birthday,
-      sex,
-    );
-
-    if (profileResult.error) {
-      return {
-        data: null,
-        error: profileResult.error,
-      };
-    }
-  }
-
-  return { data, error: null };
+  return { data: accountResult.data, error: null };
 };
 
+// ---------------------------------------------------------------------------
+// Login
+// ---------------------------------------------------------------------------
 export const loginActionWithEmail = async (email: string, password: string) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-  // then login info will be store in cookies
 
   if (error) {
     return {
@@ -77,22 +143,23 @@ export const loginActionWithEmail = async (email: string, password: string) => {
     };
   }
 
-  console.log("login data", { data });
-  return {
-    data,
-    error: null,
-  };
+  return { data, error: null };
 };
 
-const getUserProfile = async (user: User): Promise<UserProfile> => {
+// ---------------------------------------------------------------------------
+// Profile helpers
+// ---------------------------------------------------------------------------
+const getUserProfile = async (user: User): Promise<UserProfile | null> => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
-  const { data: profile, error: profileError } = await supabase
+
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
+  if (error) return null; // profile doesn't exist yet (mid-wizard drop-off)
   return profile as UserProfile;
 };
 
@@ -105,18 +172,17 @@ export const getUserContext = async (): Promise<UserContext> => {
     error,
   } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    return null;
-  }
+  if (error || !user) return null;
 
   const profile = await getUserProfile(user);
 
   return {
-    profile: profile,
+    profile, // null if they dropped off mid-wizard — check this on login
     ...user,
     isLoggedIn: true,
   };
 };
+
 export const updateUserProfile = async ({
   userId,
   display_name,
@@ -129,80 +195,43 @@ export const updateUserProfile = async ({
 
   const { data, error } = await supabase
     .from("profiles")
-    .update({
-      display_name,
-      bio,
-      sex,
-      birthday,
-    })
+    .update({ display_name, bio, sex, birthday })
     .eq("id", userId);
 
   if (error) {
     return {
       data: null,
-      error: {
-        message: error.message,
-        code: error.code,
-      },
-    };
-  }
-
-  return { data, error: null };
-};
-export const createUserProfile = async (
-  userId: string,
-  display_name: string,
-  birthday: string,
-  sex: string,
-  // displayName: string,
-) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  const { data, error } = await supabase.from("profiles").insert([
-    {
-      id: userId,
-      display_name,
-      birthday,
-      sex,
-      // display_name: displayName,
-    },
-  ]);
-
-  if (error) {
-    return {
-      data: null,
-      error: {
-        message: error.message,
-        code: error.code,
-      },
+      error: { message: error.message, code: error.code },
     };
   }
 
   return { data, error: null };
 };
 
+// ---------------------------------------------------------------------------
+// Sign out
+// ---------------------------------------------------------------------------
 export const signOutAction = async () => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
-  console.log("signing out");
   await supabase.auth.signOut();
-  // await supabase.auth.signOut({ scope: 'local' })
 };
 
+// ---------------------------------------------------------------------------
+// Guest sign-in
+// ---------------------------------------------------------------------------
 export const signUpAsGuestAction = async () => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+
   const { data, error } = await supabase.auth.signInAnonymously();
+
   if (error) {
-    console.error("Error signing in as guest");
     return {
       data: null,
       error: { message: error.message, code: error.code, status: error.status },
     };
   }
-  return {
-    data,
-    error: null,
-  };
+
+  return { data, error: null };
 };

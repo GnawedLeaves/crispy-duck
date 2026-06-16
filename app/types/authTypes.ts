@@ -29,7 +29,7 @@ export interface UserProfile {
 
 //main User type
 export interface ExtendedUser extends User {
-  profile: UserProfile;
+  profile: UserProfile | null;
   isLoggedIn: boolean;
 }
 

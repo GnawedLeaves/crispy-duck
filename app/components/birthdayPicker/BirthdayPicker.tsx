@@ -77,8 +77,8 @@ export const BirthdayPicker = ({
   );
 
   return (
-    <div className="flex flex-col gap-1 w-full">
-      <span className="text-sm font-semibold opacity-70 px-1">Birthday</span>
+    <div className="flex flex-col gap-1 w-full  ">
+      {/* <span className="text-sm font-semibold opacity-70 px-1">Birthday</span> */}
       <div className="grid grid-cols-3 gap-2 w-full">
         {/* Month Selector */}
         <select
