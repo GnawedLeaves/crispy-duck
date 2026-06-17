@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { token } from "./theme";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -7,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "A Weight Analysis Scanner built with Next.js",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#000000",
+    background_color: token.light.background,
+    theme_color: token.light.background,
     icons: [
       {
         src: "/icon-192x192.png",
