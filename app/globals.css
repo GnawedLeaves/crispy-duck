@@ -26,7 +26,6 @@ body {
   /* color: var(--foreground); */
   color: var(--textColor);
   font-family: var(--font-josefin);
-  transition: background-color 0.1s ease-out;
 }
 .contentLayout {
   padding: 2rem 2rem 10rem 2rem;
