@@ -88,7 +88,8 @@ const ProfileBanner = () => {
             {user?.profile?.display_name ?? "Loading..."}
           </div>
           <div style={{ fontSize: "14px" }}>
-            {user?.profile?.bio ?? "looking crispy"}
+            {user?.email}
+            {/* {user?.profile?.bio ?? "looking crispy"} */}
           </div>
         </div>
       </div>
