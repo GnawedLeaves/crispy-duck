@@ -4,7 +4,7 @@ import { token } from "@/app/theme";
 import { LogOut, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, ViewTransition } from "react";
+import { useEffect, useState } from "react";
 import EditProfileModal from "./editProfileModal";
 import { withDelay } from "@/app/utils/common";
 import { signOutAction } from "@/app/utils/login/authUtils";
@@ -58,7 +58,7 @@ const ProfileBanner = () => {
       }
     >
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <div className="skeleton w-[60px] h-[60px] rounded-full shrink-0" />
+        <div className="skeleton w-15 h-15 rounded-full shrink-0" />
         <div className="flex flex-col gap-2">
           <div className="skeleton h-6 w-32" />
           <div className="skeleton h-4 w-44" />
@@ -123,7 +123,7 @@ const ProfileBanner = () => {
         </div>
       </div>
 
-      <div className=" gap-2" style={{ display: isLoading ? "none" : "flex" }}>
+      <div className="gap-2" style={{ display: isLoading ? "none" : "flex" }}>
         <div
           onClick={handleClickEditProfile}
           className="p-2 rounded-full inline-block transition-colors hover:opacity-80"

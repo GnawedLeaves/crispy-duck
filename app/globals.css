@@ -66,11 +66,29 @@ body {
   transform: translate(2px, 2px);
 }
 
+.standardButtonPressed {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--text-color);
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 0px 0px var(--text-color);
+  transition:
+    box-shadow 0.1s ease,
+    transform 0.1s ease;
+  background: var(--bg-color);
+  cursor: pointer;
+  transform: translate(2px, 2px);
+}
+
 .standardShadow {
   box-shadow: 4px 4px 0px 0px var(--text-color);
   transition:
     box-shadow 0.2s ease,
     transform 0.2s ease;
+}
+
+.standardShadow:active {
+  box-shadow: inset 2px 2px 0px 0px var(--text-color);
+  transform: translate(2px, 2px);
 }
 
 .standardBorder {

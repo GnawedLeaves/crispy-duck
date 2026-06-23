@@ -67,11 +67,11 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
       )}
       <br />
 
-      <div className="text-xl font-bold">Current Stats</div>
-
       {trendData?.length < 1 && (
-        <div>
-          <div>You don't have any scans.</div>
+        <div className="flex flex-col gap-2 mt-5">
+          <div className="text-2xl text-center  ">
+            You don't have any scans...{" "}
+          </div>
           <button className="standardButton" onClick={handlePushToScan}>
             Start scanning
           </button>
@@ -80,6 +80,7 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
 
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-4">
+          <div className="text-xl font-bold text-center">Current Stats</div>
           <ProgressBarStatItem
             title="Total Weight"
             progressPercentage={latestScan?.["Total Weight"] ?? 0}

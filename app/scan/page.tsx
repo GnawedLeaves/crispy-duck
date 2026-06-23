@@ -19,6 +19,8 @@ export default async function ScanPage() {
   return (
     <ViewTransition>
       <main className="contentLayout">
+        <div className="text-4xl text-center mb-4 font-bold">Scan</div>
+
         <ScannerView
           handleFileUpload={handleFileUpload}
           currentUserId={user.id}

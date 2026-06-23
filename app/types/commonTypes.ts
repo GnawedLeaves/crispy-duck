@@ -1,3 +1,5 @@
+import { UserProfile } from "./authTypes";
+
 export interface ITautaScanData {
   /** The calculated Body Mass Index (BMI) */
   bmi: number;
@@ -59,3 +61,9 @@ export type SignUpPageState =
   | "sex";
 
 export type PageState = "landing" | "login" | "signUp";
+
+export interface FriendModel extends UserProfile {
+  friendshipStatus: "accepted" | "pending" | "none";
+}
+
+export type FriendFilterType = "All" | "Friends" | "Pending" | "Strangers";

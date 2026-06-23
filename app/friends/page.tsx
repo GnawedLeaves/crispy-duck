@@ -1,11 +1,14 @@
 import { ViewTransition } from "react";
-import ProfileBanner from "../components/profile/profileBanner";
+import FriendPanel from "./components/friendPanel";
+import FriendFilterBar from "./components/friendFilterBar";
 
 const FriendPage = () => {
   return (
     <ViewTransition name="page-content">
       <div className="contentLayout">
-        <div>Friends go here</div>
+        <div className="text-4xl text-center mb-4 font-bold">Friends</div>
+
+        <FriendPanel />
       </div>
     </ViewTransition>
   );
