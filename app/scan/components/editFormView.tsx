@@ -5,6 +5,8 @@ import { uploadScanData } from "@/app/utils/supabase/scanAction";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { withDelay } from "@/app/utils/common";
+import { NativeBirthdayPicker } from "@/app/components/birthdayPicker/NativeBirthdayPicker";
+import dayjs from "dayjs";
 
 const COOKIE_KEY = "tauta_scan_draft";
 const IMAGE_STORAGE_KEY = "tauta_scan_image";
@@ -91,11 +93,20 @@ const EditFormView = ({
   onBack,
   imagePreview,
 }: EditFormViewProps) => {
-  const [formData, setFormData] = useState<ITautaScanData>(initialData);
+  const normalizedInitialData = {
+    ...initialData,
+    scanDate: initialData.scanDate
+      ? dayjs(initialData.scanDate).format("YYYY-MM-DD")
+      : "",
+  };
+
+  const [formData, setFormData] = useState<ITautaScanData>(
+    normalizedInitialData,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Persist draft to cookie on every change (imagePreview stored in sessionStorage)
+  // persist draft to cookie on every change (imagePreview stored in sessionStorage)
   useEffect(() => {
     saveDraftToCookie(formData, imagePreview);
   }, [formData, imagePreview]);
@@ -147,7 +158,9 @@ const EditFormView = ({
       <div className="w-full">
         <h2 className="text-xl font-semibold mb-1">Review your scan</h2>
         <p className="text-sm opacity-60">
-          Edit any values before saving to your profile.
+          Check values before saving to profile.
+          <br />
+          You may leave and continue later.
         </p>
       </div>
 
@@ -160,19 +173,30 @@ const EditFormView = ({
                 <span className="ml-1 normal-case opacity-40">(optional)</span>
               )}
             </label>
-            <input
-              type={
-                key === "scanDate" || key === "scanTime" ? "text" : "number"
-              }
-              value={
-                formData[key] === null || formData[key] === undefined
-                  ? ""
-                  : String(formData[key])
-              }
-              onChange={(e) => handleChange(key, e.target.value)}
-              placeholder={OPTIONAL_FIELDS.includes(key) ? "—" : ""}
-              className="signUpFormField text-sm w-full bg-transparent outline-none"
-            />
+
+            {key === "scanDate" ? (
+              <NativeBirthdayPicker
+                value={
+                  formData.scanDate === null || formData.scanDate === undefined
+                    ? ""
+                    : String(formData.scanDate)
+                }
+                onChange={(dateString) => handleChange("scanDate", dateString)}
+                placeholder="Select scan date"
+              />
+            ) : (
+              <input
+                type={key === "scanTime" ? "text" : "number"}
+                value={
+                  formData[key] === null || formData[key] === undefined
+                    ? ""
+                    : String(formData[key])
+                }
+                onChange={(e) => handleChange(key, e.target.value)}
+                placeholder={OPTIONAL_FIELDS.includes(key) ? "—" : ""}
+                className="signUpFormField text-sm w-full bg-transparent outline-none"
+              />
+            )}
           </div>
         ))}
       </div>

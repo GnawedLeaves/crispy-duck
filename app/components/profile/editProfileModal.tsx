@@ -10,6 +10,7 @@ import {
   checkUsernameAvailability,
 } from "@/app/utils/login/authUtils";
 import { useAuth } from "@/app/context/AuthContext";
+import { NativeBirthdayPicker } from "../birthdayPicker/NativeBirthdayPicker";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const USERNAME_MIN_LENGTH = 7;
@@ -246,10 +247,9 @@ const EditProfileModal = ({
 
         <div className="w-full flex flex-col gap-1">
           <label className="text-xs text-gray-400 ml-1">Birthday</label>
-          <BirthdayPicker
+          <NativeBirthdayPicker
             value={birthday}
             onChange={(dateString) => setBirthday(dateString)}
-            className={"signUpFormField"}
           />
         </div>
 

@@ -7,12 +7,11 @@ import Image from "next/image";
 import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
 import Link from "next/link";
-import { token } from "@/app/theme";
+import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
 const OPTIONAL_FIELDS = ["degreeOfObesity", "idealBodyWeight"];
-const IMAGE_STORAGE_KEY = "tauta_scan_image";
 
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -41,7 +40,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [rawResult, setRawResult] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scanData, setScanData] = useState<ITautaScanData | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
@@ -54,6 +53,14 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
       setStep("edit");
     }
   }, []);
+
+  // Shared reset used by "replace image", "back from edit", and "scan another"
+  const resetScanState = () => {
+    setInputFile(null);
+    setImagePreview(null);
+    setRawResult("");
+    setScanError(null);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -92,12 +99,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setLoading(false);
   });
 
-  const handleReplaceImage = withDelay(() => {
-    setInputFile(null);
-    setImagePreview(null);
-    setRawResult("");
-    setScanError(null);
-  });
+  const handleReplaceImage = withDelay(resetScanState);
 
   const processedResult = useMemo(() => {
     if (rawResult) return parseTautaScan(rawResult);
@@ -119,9 +121,15 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setStep("edit");
   }, [processedResult]);
 
+  const handleScanAnother = () => {
+    setStep("scan");
+    resetScanState();
+    setScanData(null);
+  };
+
   if (step === "success") {
     return (
-      <div className="flexCenter flex-col gap-4">
+      <div className="flexCenter min-h-[70vh] flex-col gap-4">
         <div className="cardWithShadow text-center flex flex-col gap-3 px-8 py-6">
           <p className="font-semibold">Scan saved!</p>
           <p className="text-sm opacity-60">
@@ -134,13 +142,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
           </Link>
           <button
             className="standardButton bg-lime-200!"
-            onClick={() => {
-              setStep("scan");
-              setInputFile(null);
-              setImagePreview(null);
-              setRawResult("");
-              setScanData(null);
-            }}
+            onClick={handleScanAnother}
           >
             Scan another
           </button>
@@ -156,18 +158,13 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         initialData={scanData}
         currentUserId={currentUserId}
         onSuccess={() => {
-          setInputFile(null);
-          setImagePreview(null);
-          setRawResult("");
+          resetScanState();
           setScanData(null);
           setStep("success");
         }}
         onBack={() => {
           setStep("scan");
-          setInputFile(null);
-          setImagePreview(null);
-          setRawResult("");
-          setScanData(null);
+          resetScanState();
         }}
       />
     );
@@ -176,7 +173,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   // step === "scan"
   return (
     <ViewTransition>
-      <div className="flexCenter flex-col gap-4">
+      <div className="flexCenter min-h-[70vh] w-full flex-col gap-6">
         {imagePreview && (
           <Image
             alt="scan_preview_image"
@@ -187,7 +184,21 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
           />
         )}
 
-        {inputFile && !loading ? (
+        {loading ? (
+          <div className="flex flex-col gap-4 items-center text-center">
+            <span className="loading loading-spinner loading-md" />
+            <AnimatedLoadingText
+              messages={[
+                "Analyzing your data...",
+                "Generating insights...",
+                "Finding relevant information...",
+                "Preparing your response...",
+                "Almost there...",
+              ]}
+              interval={5000}
+            />
+          </div>
+        ) : inputFile ? (
           <div className="flexCenter gap-4">
             <button
               className="standardButton bg-lime-200!"
@@ -200,29 +211,15 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
             </button>
           </div>
         ) : (
-          !loading && (
-            <label
-              className="standardButton cursor-pointer font-bold text-center w-50 h-50 text-5xl flexCenter"
-              style={{ background: token.light.blueColor }}
-            >
-              Add File
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-          )
-        )}
-
-        {loading && (
-          <div className="flex flex-col gap-4 items-center text-center">
-            <span className="loading loading-spinner loading-md" />
-            <div>
-              This may take a while, do not move from this screen. if not gg
-            </div>
-          </div>
+          <label className="standardButton cursor-pointer font-bold flexCenter">
+            Add File
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
         )}
 
         {scanError && (

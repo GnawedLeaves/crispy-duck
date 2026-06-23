@@ -45,7 +45,36 @@ const ProfileBanner = () => {
     return null;
   }
 
-  return (
+  const ProfileBannerSkeleton = () => (
+    <div
+      style={
+        {
+          display: "flex",
+          padding: "2rem 2rem 0 2rem",
+          alignItems: "center",
+          justifyContent: "space-between",
+          "--color-base-300": "#D4C9C1",
+        } as React.CSSProperties
+      }
+    >
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <div className="skeleton w-[60px] h-[60px] rounded-full shrink-0" />
+        <div className="flex flex-col gap-2">
+          <div className="skeleton h-6 w-32" />
+          <div className="skeleton h-4 w-44" />
+        </div>
+      </div>
+
+      <div className="gap-2" style={{ display: "flex" }}>
+        <div className="skeleton w-9 h-9 rounded-full" />
+        <div className="skeleton w-9 h-9 rounded-full" />
+      </div>
+    </div>
+  );
+
+  return isLoading ? (
+    <ProfileBannerSkeleton />
+  ) : (
     <div
       style={{
         display: "flex",
@@ -94,7 +123,7 @@ const ProfileBanner = () => {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className=" gap-2" style={{ display: isLoading ? "none" : "flex" }}>
         <div
           onClick={handleClickEditProfile}
           className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
@@ -103,8 +132,8 @@ const ProfileBanner = () => {
           <Pencil className="w-5 h-5" />
         </div>
         <div
-          className="p-2 rounded-full inline-block transition-colors opacity-80"
-          style={{ background: token.light.redColor }}
+          className="p-2 rounded-full inline-block transition-colors opacity-80 bg-red-500"
+          // style={{ background: token.light.redColor }}
           onClick={handleClickSignOut}
         >
           <LogOut className="w-5 h-5" />
