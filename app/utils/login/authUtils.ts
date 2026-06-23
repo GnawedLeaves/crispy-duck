@@ -3,6 +3,7 @@ import { UserContext, UserProfile } from "@/app/types/authTypes";
 import { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "../supabase/server";
+import { generateRandomUsername } from "./utils";
 
 export interface UpdateProfilePayload {
   userId: string;
@@ -10,6 +11,7 @@ export interface UpdateProfilePayload {
   bio: string;
   sex: string;
   birthday: string;
+  username: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,6 +49,7 @@ export const createAccountAction = async ({
 // On next login, check `profile === null` and redirect them back to the
 // profile step (page 3 in your wizard).
 // ---------------------------------------------------------------------------
+
 export const createProfileAction = async ({
   display_name,
   birthday,
@@ -59,7 +62,6 @@ export const createProfileAction = async ({
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  // Grab the currently authenticated user — no need to pass userId from the client
   const {
     data: { user },
     error: userError,
@@ -75,25 +77,45 @@ export const createProfileAction = async ({
     };
   }
 
-  const { data, error } = await supabase.from("profiles").insert([
-    {
-      id: user.id,
-      display_name,
-      birthday,
-      sex,
-    },
-  ]);
+  const MAX_ATTEMPTS = 5;
 
-  if (error) {
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const username = generateRandomUsername();
+
+    const { data, error } = await supabase.from("profiles").insert([
+      {
+        id: user.id,
+        display_name,
+        username,
+        birthday,
+        sex,
+      },
+    ]);
+
+    if (!error) {
+      return { data, error: null };
+    }
+
+    // 23505 = unique_violation in Postgres — username collision, try again
+    if (error.code === "23505") {
+      continue;
+    }
+
+    // Any other error is a real failure, bail out immediately
     return {
       data: null,
       error: { message: error.message, code: error.code },
     };
   }
 
-  return { data, error: null };
+  return {
+    data: null,
+    error: {
+      message: "Could not generate a unique username. Please try again.",
+      code: "USERNAME_GENERATION_FAILED",
+    },
+  };
 };
-
 // ---------------------------------------------------------------------------
 // Kept for backwards compat — prefer createAccountAction + createProfileAction
 // ---------------------------------------------------------------------------
@@ -186,6 +208,7 @@ export const getUserContext = async (): Promise<UserContext> => {
 export const updateUserProfile = async ({
   userId,
   display_name,
+  username,
   bio,
   sex,
   birthday,
@@ -195,7 +218,7 @@ export const updateUserProfile = async ({
 
   const { data, error } = await supabase
     .from("profiles")
-    .update({ display_name, bio, sex, birthday })
+    .update({ display_name, username, bio, sex, birthday })
     .eq("id", userId);
 
   if (error) {
@@ -207,6 +230,33 @@ export const updateUserProfile = async ({
 
   return { data, error: null };
 };
+
+export const checkUsernameAvailability = async (
+  username: string,
+  currentUserId?: string
+) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  let query = supabase.from("profiles").select("id").eq("username", username);
+
+  if (currentUserId) {
+    query = query.neq("id", currentUserId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    return {
+      available: false,
+      error: { message: error.message, code: error.code },
+    };
+  }
+
+  return { available: !data, error: null };
+};
+
+
 
 // ---------------------------------------------------------------------------
 // Sign out
@@ -235,3 +285,6 @@ export const signUpAsGuestAction = async () => {
 
   return { data, error: null };
 };
+
+
+

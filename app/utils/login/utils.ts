@@ -1,0 +1,36 @@
+const ADJECTIVES = [
+  "soft", "gentle", "quiet", "bright", "calm", "swift", "bold", "warm",
+  "cool", "wild", "kind", "brave", "lucky", "lazy", "happy", "sleepy",
+  "quick", "sharp", "shy", "wise", "sunny", "dusty", "misty", "rusty",
+  "golden", "silver", "amber", "violet", "cosmic", "rogue", "playful",
+  "dreamy", "daring", "steady", "loyal", "noble", "proud", "simple",
+  "hidden", "silent", "faint", "vivid", "gentle", "radiant", "serene",
+];
+
+const ADJECTIVES_2 = [
+  "tiny", "giant", "ancient", "modern", "fuzzy", "smooth", "rough",
+  "icy", "fiery", "stormy", "frozen", "hollow", "velvet", "marble",
+  "electric", "crimson", "azure", "emerald", "scarlet", "ivory",
+  "midnight", "morning", "winter", "summer", "secret", "hidden",
+  "distant", "wandering", "lone", "curious", "bold", "mystic",
+  "ethereal", "subtle", "rugged", "polished", "blazing", "shifting",
+  "hushed", "vibrant", "graceful", "timeless", "dark", "light",
+];
+
+const NOUNS = [
+  "rock", "river", "forest", "mountain", "ocean", "cloud", "storm",
+  "fox", "wolf", "owl", "hawk", "bear", "tiger", "panther", "falcon",
+  "comet", "star", "moon", "ember", "shadow", "willow", "maple",
+  "stone", "ridge", "valley", "harbor", "meadow", "canyon", "lantern",
+  "compass", "cove", "peak", "glacier", "thicket", "breeze", "echo",
+  "grotto", "summit", "crescent", "horizon", "tide", "glade", "flame",
+  "haven", "relic", "cipher", "spire", "crag", "willow", "mist",
+];
+
+function pick(arr: string[]) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function generateRandomUsername(): string {
+  return `${pick(ADJECTIVES)}_${pick(ADJECTIVES_2)}_${pick(NOUNS)}`;
+}

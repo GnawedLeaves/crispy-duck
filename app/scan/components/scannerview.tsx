@@ -41,7 +41,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [rawResult, setRawResult] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [scanData, setScanData] = useState<ITautaScanData | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
@@ -217,7 +217,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         )}
 
         {loading && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4 items-center text-center">
             <span className="loading loading-spinner loading-md" />
             <div>
               This may take a while, do not move from this screen. if not gg
