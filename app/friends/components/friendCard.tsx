@@ -54,7 +54,7 @@ const FriendCard = ({
   };
   return (
     <div
-      className="flex w-full border-b py-4 px-8 justify-between h-28"
+      className="flex w-full border-b py-2 px-4 justify-between h-28"
       style={{ borderColor: token.light.borderColor }}
     >
       <div className="flex gap-2 h-full ">

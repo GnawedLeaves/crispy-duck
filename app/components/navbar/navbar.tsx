@@ -17,6 +17,11 @@ const Navbar = () => {
   const { user } = useAuth();
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+  const isActiveMany = (paths: string[]) => {
+    const res = paths.find((path) => pathname.includes(path));
+    if (res) return true;
+    return false;
+  };
   if (user && !pathname.includes("/login")) {
     return (
       <ViewTransition name="footer">
@@ -51,7 +56,7 @@ const Navbar = () => {
               </Link>
             </div>
             <div
-              className={`${styles.navbarItem}  ${isActive("/friends") ? styles.selectedNavItem : styles.unselectedNavItem}`}
+              className={`${styles.navbarItem}  ${isActiveMany(["/friends", "/profile"]) ? styles.selectedNavItem : styles.unselectedNavItem}`}
             >
               <Link href={"/friends"}>
                 <Users />
