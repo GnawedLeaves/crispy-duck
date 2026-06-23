@@ -61,10 +61,14 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
   ];
 
   return (
-    <div className="cardWithShadow">
+    <div>
+      {trendData?.length > 0 && (
+        <div className="text-xl">Total Scans: {trendData?.length}</div>
+      )}
+      <br />
+
       <div className="text-xl font-bold">Current Stats</div>
 
-      {trendData?.length > 0 && <div>TOTAL SCANS: {trendData?.length}</div>}
       {trendData?.length < 1 && (
         <div>
           <div>You don't have any scans.</div>
@@ -76,6 +80,11 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
 
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-4">
+          <ProgressBarStatItem
+            title="Total Weight"
+            progressPercentage={latestScan?.["Total Weight"] ?? 0}
+            progressString={`${latestScan?.["Total Weight"] ?? "--"} kg`}
+          />
           <ProgressBarStatItem
             title="Fat Percentage"
             progressPercentage={latestScan?.["Fat Percentage"] ?? 0}
@@ -95,9 +104,9 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
       )}
 
       {trendData?.length > 0 && (
-        <div className="flex flex-col gap-6 mt-6">
+        <div className="flex flex-col gap-6 mt-6 ">
           {charts.map(({ label, key, formatter }) => (
-            <div key={key}>
+            <div key={key} className="cardWithShadow">
               <div className="text-2xl font-semibold mb-1">{label}</div>
               <LineChart
                 className="h-48"
