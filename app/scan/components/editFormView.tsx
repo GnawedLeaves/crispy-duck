@@ -7,6 +7,7 @@ import Image from "next/image";
 import { withDelay } from "@/app/utils/common";
 import { NativeBirthdayPicker } from "@/app/components/birthdayPicker/NativeBirthdayPicker";
 import dayjs from "dayjs";
+import { token } from "@/app/theme";
 
 const COOKIE_KEY = "tauta_scan_draft";
 const IMAGE_STORAGE_KEY = "tauta_scan_image";
@@ -212,7 +213,8 @@ const EditFormView = ({
           ← Back
         </button>
         <button
-          className="standardButton flex-1 bg-lime-400!"
+          className="standardButton flex-1"
+          style={{ background: token.light.primaryColor }}
           onClick={handleSubmit}
           disabled={loading}
         >

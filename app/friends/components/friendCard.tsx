@@ -54,7 +54,8 @@ const FriendCard = ({
               onClick={() => {
                 onAcceptFriendClick(friendModel.friendshipModel.friendshipId);
               }}
-              className="p-2 rounded-full inline-block transition-colors hover:opacity-80  standardButton bg-lime-400!"
+              style={{ background: token.light.greenColor }}
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80  standardButton"
             >
               <Check className="w-5 h-5" />
             </div>

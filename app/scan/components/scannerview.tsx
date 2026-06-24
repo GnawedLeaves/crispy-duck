@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
 import Link from "next/link";
 import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
+import { token } from "@/app/theme";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
@@ -141,7 +142,8 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
             Go to Stats
           </Link>
           <button
-            className="standardButton bg-lime-400!"
+            className="standardButton "
+            style={{ background: token.light.primaryColor }}
             onClick={handleScanAnother}
           >
             Scan another
@@ -201,7 +203,8 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         ) : inputFile ? (
           <div className="flexCenter gap-4">
             <button
-              className="standardButton bg-lime-400!"
+              className="standardButton "
+              style={{ background: token.light.primaryColor }}
               onClick={handleConfirmUpload}
             >
               Scan

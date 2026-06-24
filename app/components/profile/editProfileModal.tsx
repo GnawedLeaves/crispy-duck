@@ -190,17 +190,32 @@ const EditProfileModal = ({
         className="flexCenter flex-col gap-4 p-4 rounded-xl"
       >
         {existingUser?.profile?.avatar_url && (
-          <Image
-            src={
-              avatarPreview ||
-              existingUser?.profile?.avatar_url ||
-              "/default-avatar.png"
-            }
-            alt="profile_picture"
-            width={100}
-            height={100}
-            className="rounded-full object-cover w-25 h-25"
-          />
+          <div
+            className="relative cursor-pointer group"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Image
+              src={
+                avatarPreview ||
+                existingUser?.profile?.avatar_url ||
+                "/default-avatar.png"
+              }
+              alt="profile_picture"
+              width={100}
+              height={100}
+              className="rounded-full object-cover w-[100px] h-[100px]"
+            />
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs">
+              Change
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+          </div>
         )}
 
         <div className="w-full flex flex-col gap-1">

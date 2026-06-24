@@ -106,10 +106,11 @@ const ProfileBanner = () => {
           className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
         >
           <Image
+            width={100}
+            height={100}
             src={user?.profile?.avatar_url ?? "/default-avatar.png"}
             alt="avatar_image"
-            width={60}
-            height={60}
+            className="rounded-full object-cover w-18 h-18 border-2 border-black"
           />
         </Link>
         <div>
@@ -126,14 +127,24 @@ const ProfileBanner = () => {
       <div className="gap-2" style={{ display: isLoading ? "none" : "flex" }}>
         <div
           onClick={handleClickEditProfile}
-          className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
-          style={{ background: token.light.primaryColor }}
+          className="standardButton flexCenter"
+          style={{
+            borderRadius: "50%",
+            width: "2.5rem",
+            height: "2.5rem",
+            padding: 0,
+          }}
         >
           <Pencil className="w-5 h-5" />
         </div>
         <div
-          className="p-2 rounded-full inline-block transition-colors opacity-80 bg-red-500"
-          // style={{ background: token.light.redColor }}
+          className="standardButton flexCenter"
+          style={{
+            borderRadius: "50%",
+            width: "2.5rem",
+            height: "2.5rem",
+            padding: 0,
+          }}
           onClick={handleClickSignOut}
         >
           <LogOut className="w-5 h-5" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { token } from "@/app/theme";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
 import { ProcessScanResponse } from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
@@ -75,7 +76,8 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
       {inputFile && !loading ? (
         <div className="flexCenter gap-4">
           <button
-            className="standardButton  bg-lime-400!"
+            className="standardButton"
+            style={{ background: token.light.primaryColor }}
             onClick={handleConfirmUpload}
           >
             Scan
