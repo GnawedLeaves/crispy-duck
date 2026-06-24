@@ -1,4 +1,5 @@
 "use client";
+import { token } from "@/app/theme";
 import { withDelay } from "@/app/utils/common";
 import { startTransition } from "react";
 
@@ -36,7 +37,11 @@ const SignUpDisplayNamePage = ({
             placeholder="Display Name"
             required
           />
-          <button className="standardButton bg-amber-400!" type="submit">
+          <button
+            className="standardButton "
+            type="submit"
+            style={{ background: token.light.primaryColor }}
+          >
             Continue
           </button>
         </div>

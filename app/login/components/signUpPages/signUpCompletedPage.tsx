@@ -18,7 +18,7 @@ const SignUpCompletedPage = ({ onContinueClick }: SignUpCompletedPageProps) => {
   return (
     <div
       className="contentLayout flexCenter flex-col"
-      style={{ background: token.light.primaryColor }}
+      style={{ background: token.light.orangeYellowColor }}
     >
       <div className="flex gap-5 flex-col">
         <div className="text-5xl text-center">Success!</div>

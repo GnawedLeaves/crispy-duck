@@ -19,7 +19,7 @@ const LandingPage = ({ setPageState }: LandingPageProps) => {
   return (
     <div
       className="contentLayout flexCenter flex-col gap-8"
-      style={{ background: token.light.primaryColor }}
+      style={{ background: token.light.orangeYellowColor }}
     >
       <div className="flex flex-col gap-1 w-full">
         <div className="text-2xl text-center w-full ">Welcome to</div>

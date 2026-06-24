@@ -260,7 +260,10 @@ const EditProfileModal = ({
             </span>
           )}
           {usernameStatus === "taken" && (
-            <span className="text-xs text-red-500 ml-1">
+            <span
+              className="text-xs  ml-1"
+              style={{ color: token.light.redColor }}
+            >
               Username already taken
             </span>
           )}

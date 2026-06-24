@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/app/context/AuthContext";
+import { token } from "@/app/theme";
 import { createAccountAction } from "@/app/utils/login/authUtils";
 import { useState } from "react";
 
@@ -204,7 +205,8 @@ const SignUpEmailPage = ({ onSuccess }: SignUpEmailPageProps) => {
 
           <button
             disabled={!isFormComplete || isLoading}
-            className="standardButton bg-amber-400!"
+            className="standardButton "
+            style={{ background: token.light.primaryColor }}
             type="submit"
           >
             {isLoading ? "Creating account…" : "Continue"}

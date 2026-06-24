@@ -5,6 +5,7 @@ import { loginActionWithEmail } from "@/app/utils/login/authUtils";
 import { useRouter } from "next/navigation";
 import ButtonBar from "./buttonBar";
 import { PageState } from "@/app/types/commonTypes";
+import { token } from "@/app/theme";
 
 interface LoginFormError {
   message: string;
@@ -80,7 +81,11 @@ const SignInForm = ({ setPageState }: SignInFormProps) => {
             {success && (
               <div style={{ color: "green" }}>Log In successful!</div>
             )}
-            <button className="standardButton bg-amber-400!" type="submit">
+            <button
+              className="standardButton "
+              type="submit"
+              style={{ background: token.light.primaryColor }}
+            >
               {isLoading ? (
                 <div className="flex gap-3 align-center justify-center">
                   <span className="loading loading-spinner"></span>

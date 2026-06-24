@@ -9,6 +9,7 @@ interface ThemeToken {
     blueColor: string;
     tempGrey: string;
     greenColor: string;
+    orangeYellowColor: string;
   };
   dark: {
     background: string;
@@ -26,6 +27,7 @@ export const token: ThemeToken = {
     redColor: "#F04B4B",
     blueColor: "#70CDDE",
     tempGrey: "#999999",
+    orangeYellowColor: "#FEB801",
     greenColor: "#6CBD45",
   },
   dark: {

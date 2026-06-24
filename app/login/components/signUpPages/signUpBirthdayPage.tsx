@@ -1,5 +1,6 @@
 "use client";
 import { BirthdayPicker } from "@/app/components/birthdayPicker/BirthdayPicker";
+import { token } from "@/app/theme";
 import { withDelay } from "@/app/utils/common";
 import { startTransition } from "react";
 
@@ -35,7 +36,11 @@ const SignUpBirthdayPage = ({
             />
           </div>
 
-          <button className="standardButton bg-amber-400!" type="submit">
+          <button
+            className="standardButton "
+            type="submit"
+            style={{ background: token.light.primaryColor }}
+          >
             Continue
           </button>
         </div>

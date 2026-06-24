@@ -100,7 +100,7 @@ const ProfileBanner = () => {
         onClose={handleCloseEditProfileModalClick}
       />
 
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+      <div className="flex gap-1 items-center">
         <Link
           href="/profile"
           className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
@@ -114,7 +114,7 @@ const ProfileBanner = () => {
           />
         </Link>
         <div>
-          <div style={{ fontSize: "24px", fontWeight: "bold" }}>
+          <div className="text-2xl font-bold">
             {user?.profile?.display_name ?? "Loading..."}
           </div>
           <div className="text-sm ">{"@" + user?.profile?.username}</div>

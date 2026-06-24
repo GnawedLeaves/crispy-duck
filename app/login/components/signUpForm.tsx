@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./styles.module.css";
 import { BirthdayPicker } from "@/app/components/birthdayPicker/BirthdayPicker";
+import { token } from "@/app/theme";
 
 interface LoginFormError {
   message: string;
@@ -118,11 +119,16 @@ const SignUpForm = () => {
           />
           {error && <div style={{ color: "red" }}>{error.message}</div>}
           {success && <div style={{ color: "green" }}>Sign up successful!</div>}
-          <button className="standardButton bg-amber-400!" type="submit">
+          <button
+            className="standardButton "
+            type="submit"
+            style={{ background: token.light.primaryColor }}
+          >
             Sign Up
           </button>
           <button
-            className="standardButton bg-amber-400!"
+            className="standardButton "
+            style={{ background: token.light.primaryColor }}
             type="button"
             onClick={handleGuestSignUp}
           >
