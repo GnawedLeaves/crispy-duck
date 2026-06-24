@@ -117,10 +117,7 @@ const ProfileBanner = () => {
           <div style={{ fontSize: "24px", fontWeight: "bold" }}>
             {user?.profile?.display_name ?? "Loading..."}
           </div>
-          <div style={{ fontSize: "14px" }}>
-            {user?.email}
-            {/* {user?.profile?.bio ?? "looking crispy"} */}
-          </div>
+          <div className="text-sm ">{"@" + user?.profile?.username}</div>
         </div>
       </div>
 

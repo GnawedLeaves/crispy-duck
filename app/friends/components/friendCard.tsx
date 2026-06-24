@@ -45,7 +45,7 @@ const FriendCard = ({
               onClick={() => {
                 onRejectFriendClick(friendModel.friendshipModel.friendshipId);
               }}
-              className="p-2 rounded-full inline-block transition-colors hover:opacity-80  standardButton "
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80 standardButton "
               style={{ background: token.light.redColor }}
             >
               <X className="w-5 h-5" />
@@ -55,7 +55,7 @@ const FriendCard = ({
                 onAcceptFriendClick(friendModel.friendshipModel.friendshipId);
               }}
               style={{ background: token.light.greenColor }}
-              className="p-2 rounded-full inline-block transition-colors hover:opacity-80  standardButton"
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80 standardButton"
             >
               <Check className="w-5 h-5" />
             </div>

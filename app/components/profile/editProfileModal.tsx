@@ -12,6 +12,7 @@ import {
 } from "@/app/utils/login/authUtils";
 import { useAuth } from "@/app/context/AuthContext";
 import { NativeBirthdayPicker } from "../birthdayPicker/NativeBirthdayPicker";
+import { token } from "@/app/theme";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const USERNAME_MIN_LENGTH = 7;
@@ -251,7 +252,10 @@ const EditProfileModal = ({
             </span>
           )}
           {usernameStatus === "available" && (
-            <span className="text-xs text-green-500 ml-1">
+            <span
+              className="text-xs  ml-1"
+              style={{ color: token.light.greenColor }}
+            >
               Username available
             </span>
           )}
