@@ -10,14 +10,18 @@ interface FriendCardProps {
   friendModel: FriendModel;
   onViewProfileClick: (id: string) => void;
   onAddFriendClick: (id: string) => void;
+  onAcceptFriendClick: (id: string) => void;
+  onRejectFriendClick: (id: string) => void;
 }
 const FriendCard = ({
   friendModel,
   onViewProfileClick,
   onAddFriendClick,
+  onAcceptFriendClick,
+  onRejectFriendClick,
 }: FriendCardProps) => {
   const renderSideButton = () => {
-    if (friendModel.friendshipStatus === "accepted") {
+    if (friendModel.friendship_status === "accepted") {
       return (
         <button
           className="standardButton"
@@ -29,7 +33,7 @@ const FriendCard = ({
         </button>
       );
     }
-    if (friendModel.friendshipStatus === "pending") {
+    if (friendModel.friendship_status === "pending") {
       return (
         <div>
           <Clock />

@@ -63,7 +63,9 @@ export type SignUpPageState =
 export type PageState = "landing" | "login" | "signUp";
 
 export interface FriendModel extends UserProfile {
-  friendshipStatus: "accepted" | "pending" | "none";
+  friendship_status: "accepted" | "pending" | "none";
 }
 
 export type FriendFilterType = "All" | "Friends" | "Pending" | "Strangers";
+
+export interface FriendPanelRow {}
