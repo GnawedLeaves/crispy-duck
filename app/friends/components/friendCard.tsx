@@ -4,7 +4,8 @@ import { FriendModel } from "@/app/types/commonTypes";
 import Image from "next/image";
 import maleDefaultAvatar from "../../assets/default_profile_pic_male.png";
 import { token } from "@/app/theme";
-import { Clock, Plus, UserRound } from "lucide-react";
+import { Check, Clock, Pencil, Plus, UserRound, X } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface FriendCardProps {
   friendModel: FriendModel;
@@ -20,8 +21,9 @@ const FriendCard = ({
   onAcceptFriendClick,
   onRejectFriendClick,
 }: FriendCardProps) => {
+  const { user, refreshUser, isLoading } = useAuth();
   const renderSideButton = () => {
-    if (friendModel.friendship_status === "accepted") {
+    if (friendModel.friendshipModel.friendshipStatus === "accepted") {
       return (
         <button
           className="standardButton"
@@ -33,7 +35,34 @@ const FriendCard = ({
         </button>
       );
     }
-    if (friendModel.friendship_status === "pending") {
+    if (friendModel.friendshipModel.friendshipStatus === "pending") {
+      //todo: check if the recieptientid is me, if yes then show the accept and reject buttons
+      //todo: edit the db function so that it returns full friendship data
+      if (user?.id === friendModel.friendshipModel.friendshipAddresseeId) {
+        return (
+          <div className="flex gap-2">
+            <div
+              onClick={() => {
+                onRejectFriendClick(friendModel.friendshipModel.friendshipId);
+              }}
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
+              style={{ background: token.light.primaryColor }}
+            >
+              <X className="w-5 h-5" />
+            </div>
+            <div
+              onClick={() => {
+                onAcceptFriendClick(friendModel.friendshipModel.friendshipId);
+              }}
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
+              style={{ background: token.light.primaryColor }}
+            >
+              <Check className="w-5 h-5" />
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div>
           <Clock />

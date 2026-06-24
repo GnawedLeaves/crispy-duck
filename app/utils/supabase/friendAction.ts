@@ -1,18 +1,38 @@
 // app/actions/friends.ts
 "use server";
 
+import { FriendPanelRow, FriendModel } from "@/app/types/commonTypes";
 import { createClient } from "@/app/utils/supabase/server";
 import { cookies } from "next/headers";
+
+function mapToFriendModel(row: FriendPanelRow): FriendModel {
+  return {
+    id: row.id,
+    username: row.username,
+    display_name: row.display_name,
+    avatar_url: row.avatar_url,
+    bio: undefined,
+    created_at: undefined as unknown as string,
+    updated_at: undefined as unknown as string,
+    birthday: undefined as unknown as string,
+    sex: undefined,
+    friendshipModel: {
+      friendshipStatus: row.friendship_status,
+      friendshipId: row.friendship_id ?? "",
+      friendshipRequesterId: row.friendship_requester_id ?? "",
+      friendshipAddresseeId: row.friendship_addressee_id ?? "",
+    },
+  };
+}
 
 export async function getFriendPanelData(
   filter: string,
   search: string,
   limit = 50,
   offset = 0,
-) {
+): Promise<FriendModel[]> {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
-  const { data: userData } = await supabase.auth.getUser();
 
   const { data, error } = await supabase.rpc("get_friend_panel", {
     p_filter: filter.toLowerCase(),
@@ -20,14 +40,14 @@ export async function getFriendPanelData(
     p_limit: limit,
     p_offset: offset,
   });
+
   if (error) {
     console.error("RPC Error:", error);
     throw error;
   }
 
-  return data;
+  return (data ?? []).map(mapToFriendModel);
 }
-
 export async function sendFriendRequest(addresseeId: string) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);

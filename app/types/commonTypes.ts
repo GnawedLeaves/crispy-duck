@@ -63,9 +63,26 @@ export type SignUpPageState =
 export type PageState = "landing" | "login" | "signUp";
 
 export interface FriendModel extends UserProfile {
-  friendship_status: "accepted" | "pending" | "none";
+  friendshipModel: FriendshipModel;
+}
+
+export interface FriendshipModel {
+  friendshipStatus: "accepted" | "pending" | "none" | "rejected";
+  friendshipId: string;
+  friendshipRequesterId: string;
+  friendshipAddresseeId: string;
+}
+
+//supabase
+export interface FriendPanelRow {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  friendship_id: string | null;
+  friendship_status: "accepted" | "pending" | "none" | "rejected";
+  friendship_requester_id: string | null;
+  friendship_addressee_id: string | null;
 }
 
 export type FriendFilterType = "All" | "Friends" | "Pending" | "Strangers";
-
-export interface FriendPanelRow {}
