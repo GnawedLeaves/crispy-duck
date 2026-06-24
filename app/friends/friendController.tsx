@@ -14,7 +14,7 @@ const useFriendController = ({
   initialUsers: FriendModel[];
 }) => {
   const [users, setUsers] = useState<FriendModel[]>(initialUsers);
-  const [filter, setFilter] = useState<FriendFilterType>("Pending");
+  const [filter, setFilter] = useState<FriendFilterType>("Friends");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);

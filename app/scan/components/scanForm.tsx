@@ -75,7 +75,7 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
       {inputFile && !loading ? (
         <div className="flexCenter gap-4">
           <button
-            className="standardButton  bg-lime-200!"
+            className="standardButton  bg-lime-400!"
             onClick={handleConfirmUpload}
           >
             Scan

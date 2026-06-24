@@ -45,8 +45,8 @@ const FriendCard = ({
               onClick={() => {
                 onRejectFriendClick(friendModel.friendshipModel.friendshipId);
               }}
-              className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
-              style={{ background: token.light.primaryColor }}
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80  standardButton "
+              style={{ background: token.light.redColor }}
             >
               <X className="w-5 h-5" />
             </div>
@@ -54,8 +54,7 @@ const FriendCard = ({
               onClick={() => {
                 onAcceptFriendClick(friendModel.friendshipModel.friendshipId);
               }}
-              className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
-              style={{ background: token.light.primaryColor }}
+              className="p-2 rounded-full inline-block transition-colors hover:opacity-80  standardButton bg-lime-400!"
             >
               <Check className="w-5 h-5" />
             </div>
@@ -104,9 +103,7 @@ const FriendCard = ({
         <div className="flex flex-col justify-center gap-0.5">
           <div className="text-xl font-bold">{friendModel.display_name}</div>
           <div className="text-sm max-w-36 ">{"@" + friendModel.username}</div>
-          <div className="text-xs max-w-40 opacity-50">
-            {friendModel.bio ?? "-"}
-          </div>
+          <div className="text-xs max-w-40 opacity-50">{friendModel.bio}</div>
         </div>
       </div>
       <div className="flexCenter">{renderSideButton()}</div>

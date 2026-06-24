@@ -49,6 +49,26 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
       console.error(e);
     }
   };
+
+  const handleAcceptFriendRequest = async (friendshipId: string) => {
+    try {
+      await acceptFriendRequest(friendshipId);
+      triggerToast("Friend request accepted!", token.light.primaryColor, 4000);
+    } catch (e) {
+      triggerToast("Failed to accept request", token.light.redColor, 4000);
+      console.error(e);
+    }
+  };
+
+  const handleRejectFriendRequest = async (friendshipId: string) => {
+    try {
+      await rejectFriendRequest(friendshipId);
+      triggerToast("Friend request rejected!", token.light.primaryColor, 4000);
+    } catch (e) {
+      triggerToast("Failed to reject request", token.light.redColor, 4000);
+      console.error(e);
+    }
+  };
   const handleOnFilterPress = (newFilter: FriendFilterType) => {
     setFilter(newFilter);
   };
@@ -90,7 +110,7 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
         className="cardWithShadow w-full h-[70vh] overflow-auto "
         style={{ padding: 0 }}
       >
-        <FriendPanelSearchBar />
+        <FriendPanelSearchBar search={search} setSearch={setSearch} />
         {renderLoading()}
         {renderEmptyMessage()}
 
@@ -102,12 +122,8 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
                 friendModel={friend}
                 onAddFriendClick={handleAddFriend}
                 onViewProfileClick={handleOnViewProfile}
-                onAcceptFriendClick={function (id: string): void {
-                  throw new Error("Function not implemented.");
-                }}
-                onRejectFriendClick={function (id: string): void {
-                  throw new Error("Function not implemented.");
-                }}
+                onAcceptFriendClick={handleAcceptFriendRequest}
+                onRejectFriendClick={handleRejectFriendRequest}
               />
             );
           })}

@@ -1,9 +1,15 @@
 "use client";
 
 import { token } from "@/app/theme";
-interface FriendPanelSearchBarProps {}
+interface FriendPanelSearchBarProps {
+  search: string;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
+}
 
-const FriendPanelSearchBar = ({}: FriendPanelSearchBarProps) => {
+const FriendPanelSearchBar = ({
+  search,
+  setSearch,
+}: FriendPanelSearchBarProps) => {
   return (
     <div
       className="w-full sticky top-0 z-10 border-b flex align-middle p-4"
@@ -11,9 +17,12 @@ const FriendPanelSearchBar = ({}: FriendPanelSearchBarProps) => {
     >
       <input
         type="text"
-        placeholder={"Search for any user..."}
+        placeholder={"Search for duck..."}
         className="border-2 rounded-full py-2 px-3 w-full"
-        // onChange={}
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+        }}
       />
     </div>
   );
