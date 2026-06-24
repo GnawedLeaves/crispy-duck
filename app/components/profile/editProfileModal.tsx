@@ -8,6 +8,7 @@ import { BirthdayPicker } from "../birthdayPicker/BirthdayPicker";
 import {
   updateUserProfile,
   checkUsernameAvailability,
+  uploadAvatar,
 } from "@/app/utils/login/authUtils";
 import { useAuth } from "@/app/context/AuthContext";
 import { NativeBirthdayPicker } from "../birthdayPicker/NativeBirthdayPicker";
@@ -40,6 +41,9 @@ const EditProfileModal = ({
   const [birthday, setBirthday] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && existingUser?.profile) {
@@ -49,6 +53,8 @@ const EditProfileModal = ({
       setSex(existingUser.profile.sex || "NA");
       setBirthday(existingUser.profile.birthday || "");
       setUsernameStatus("idle");
+      setAvatarFile(null);
+      setAvatarPreview(null);
     }
   }, [isOpen, existingUser]);
 
@@ -108,6 +114,21 @@ const EditProfileModal = ({
     setFormError(null);
 
     try {
+      let avatarUrl = existingUser.profile?.avatar_url ?? null;
+
+      if (avatarFile) {
+        const { url, error: uploadError } = await uploadAvatar(
+          existingUser.id,
+          avatarFile,
+        );
+        if (uploadError) {
+          setFormError(uploadError.message);
+          setIsSubmitting(false);
+          return;
+        }
+        avatarUrl = url;
+      }
+
       const { error } = await updateUserProfile({
         userId: existingUser.id,
         display_name: displayName,
@@ -115,6 +136,7 @@ const EditProfileModal = ({
         bio,
         sex,
         birthday,
+        avatar_url: avatarUrl, // make sure updateUserProfile accepts/writes this column
       });
 
       if (error) {
@@ -136,7 +158,23 @@ const EditProfileModal = ({
       submitButtonRef.current.click();
     }
   };
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      setFormError("Please select an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Image must be under 5MB.");
+      return;
+    }
+
+    setFormError(null);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
   return (
     <CustomModal
       isOpen={isOpen}
@@ -153,11 +191,15 @@ const EditProfileModal = ({
       >
         {existingUser?.profile?.avatar_url && (
           <Image
-            src={existingUser.profile.avatar_url}
+            src={
+              avatarPreview ||
+              existingUser?.profile?.avatar_url ||
+              "/default-avatar.png"
+            }
             alt="profile_picture"
             width={100}
             height={100}
-            className="rounded-full"
+            className="rounded-full object-cover w-25 h-25"
           />
         )}
 

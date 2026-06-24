@@ -74,6 +74,11 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
   };
 
   const renderEmptyMessage = () => {
+    if (users.length === 0 && search.length != 0) {
+      return (
+        <div className="flexCenter min-h-[50vh]">You can't find no one lol</div>
+      );
+    }
     if (users.length === 0 && !isLoading) {
       return (
         <div className="flexCenter min-h-[50vh]">

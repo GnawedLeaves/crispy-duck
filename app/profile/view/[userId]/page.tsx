@@ -17,7 +17,16 @@ const ViewProfilePage = async ({ params }: PageProps) => {
   if (!data) {
     return <>Add non friend preview here</>; // "Add as friend to view this profile"
   }
-  return <div>ViewProfilePage for user: {userId}</div>;
+
+  const renderNonFriendContent = () => {
+    return <div>Add this person as a friend to see their profile.</div>;
+  };
+  return (
+    <div className="contentLayout">
+      ViewProfilePage for user: {userId}
+      {!data && renderNonFriendContent()}
+    </div>
+  );
 };
 
 export default ViewProfilePage;

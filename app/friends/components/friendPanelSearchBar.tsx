@@ -1,6 +1,7 @@
 "use client";
 
 import { token } from "@/app/theme";
+import { X } from "lucide-react";
 interface FriendPanelSearchBarProps {
   search: string;
   setSearch: React.Dispatch<React.SetStateAction<string>>;
@@ -24,6 +25,16 @@ const FriendPanelSearchBar = ({
           setSearch(e.target.value);
         }}
       />
+      {search.length != 0 && (
+        <div
+          className="absolute right-8 top-7"
+          onClick={() => {
+            setSearch("");
+          }}
+        >
+          <X className="w-5 h-5" />
+        </div>
+      )}
     </div>
   );
 };

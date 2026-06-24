@@ -12,6 +12,7 @@ export interface UpdateProfilePayload {
   sex: string;
   birthday: string;
   username: string;
+  avatar_url: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -212,13 +213,14 @@ export const updateUserProfile = async ({
   bio,
   sex,
   birthday,
+  avatar_url,
 }: UpdateProfilePayload) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
   const { data, error } = await supabase
     .from("profiles")
-    .update({ display_name, username, bio, sex, birthday })
+    .update({ display_name, username, bio, sex, birthday, avatar_url })
     .eq("id", userId);
 
   if (error) {
@@ -233,7 +235,7 @@ export const updateUserProfile = async ({
 
 export const checkUsernameAvailability = async (
   username: string,
-  currentUserId?: string
+  currentUserId?: string,
 ) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
@@ -255,8 +257,6 @@ export const checkUsernameAvailability = async (
 
   return { available: !data, error: null };
 };
-
-
 
 // ---------------------------------------------------------------------------
 // Sign out
@@ -286,5 +286,36 @@ export const signUpAsGuestAction = async () => {
   return { data, error: null };
 };
 
+const AVATAR_BUCKET = "avatars";
+const MAX_AVATAR_SIZE_MB = 5;
 
+export async function uploadAvatar(userId: string, file: File) {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
 
+  if (!file.type.startsWith("image/")) {
+    return { url: null, error: { message: "Please select an image file." } };
+  }
+  if (file.size > MAX_AVATAR_SIZE_MB * 1024 * 1024) {
+    return {
+      url: null,
+      error: { message: `Image must be under ${MAX_AVATAR_SIZE_MB}MB.` },
+    };
+  }
+
+  const fileExt = file.name.split(".").pop();
+  const filePath = `${userId}/avatar.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .upload(filePath, file, { upsert: true });
+
+  if (uploadError) {
+    return { url: null, error: uploadError };
+  }
+
+  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(filePath);
+
+  // cache-bust so the new image shows immediately instead of a stale CDN copy
+  return { url: `${data.publicUrl}?t=${Date.now()}`, error: null };
+}
