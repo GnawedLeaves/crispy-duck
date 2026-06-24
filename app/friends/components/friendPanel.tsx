@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { withDelay } from "@/app/utils/common";
 import FriendPanelSearchBar from "./friendPanelSearchBar";
 import FriendFilterBar from "./friendFilterBar";
+import { useToast } from "@/app/components/toast/toastNotification";
+import { token } from "@/app/theme";
 
 const FriendPanel = () => {
   const mockFriends: FriendModel[] = [
@@ -134,6 +136,7 @@ const FriendPanel = () => {
     "Pending",
     "Strangers",
   ];
+  const { triggerToast } = useToast();
   const [selectedFilter, setSelectedFilter] = useState<FriendFilterType>("All");
   const router = useRouter();
   const handleOnViewProfile = withDelay((userId: string) => {
@@ -172,6 +175,14 @@ const FriendPanel = () => {
         buttons={filterButtons}
         onFilterPress={handleOnFilterPress}
       />
+      <button
+        className="btn btn-primary"
+        onClick={() =>
+          triggerToast("Friend request sent!", token.light.primaryColor, 4000)
+        }
+      >
+        Show Notification
+      </button>
       <div
         className="cardWithShadow w-full h-[70vh] overflow-auto "
         style={{ padding: 0 }}

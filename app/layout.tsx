@@ -8,6 +8,7 @@ import { token } from "./theme";
 import { Providers } from "./providers";
 import PWARegister from "./utils/pwa/pwa";
 import { ViewTransition } from "react";
+import { ToastProvider } from "./components/toast/toastNotification";
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -57,7 +58,7 @@ export default function RootLayout({
           <ViewTransition name="navbar-shell">
             <Navbar />
           </ViewTransition>
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </Providers>
       </body>
     </html>
