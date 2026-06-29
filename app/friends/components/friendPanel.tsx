@@ -71,12 +71,12 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
   };
 
   const renderEmptyMessage = () => {
-    if (users.length === 0 && search.length != 0) {
+    if (users?.length === 0 && search.length != 0) {
       return (
         <div className="flexCenter min-h-[50vh]">You can't find no one lol</div>
       );
     }
-    if (users.length === 0 && !isLoading) {
+    if (users?.length === 0 && !isLoading) {
       return (
         <div className="flexCenter min-h-[50vh]">
           {filter === "Strangers" && (
@@ -118,7 +118,7 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
 
         <div>
           {!isLoading &&
-            users.map((friend, index) => {
+            users?.map((friend, index) => {
               return (
                 <FriendCard
                   key={index}
