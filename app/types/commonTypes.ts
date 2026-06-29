@@ -79,6 +79,7 @@ export interface FriendPanelRow {
   username: string;
   display_name: string;
   avatar_url: string;
+  sex?: "M" | "F" | "NA";
   friendship_id: string | null;
   friendship_status: "accepted" | "pending" | "none" | "rejected";
   friendship_requester_id: string | null;

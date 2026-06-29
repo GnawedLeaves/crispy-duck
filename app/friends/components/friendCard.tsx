@@ -3,9 +3,14 @@
 import { FriendModel } from "@/app/types/commonTypes";
 import Image from "next/image";
 import maleDefaultAvatar from "../../assets/default_profile_pic_male.png";
+import femaleDefaultAvatar from "../../assets/default_profile_pic_female.png";
+
+import nbDefaultAvatar from "../../assets/default_profile_pic_NA.png";
+
 import { token } from "@/app/theme";
 import { Check, Clock, Pencil, Plus, UserRound, X } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
+import { useMemo } from "react";
 
 interface FriendCardProps {
   friendModel: FriendModel;
@@ -22,6 +27,12 @@ const FriendCard = ({
   onRejectFriendClick,
 }: FriendCardProps) => {
   const { user, refreshUser, isLoading } = useAuth();
+  const displayAvatarUrl = useMemo(() => {
+    if (friendModel.avatar_url) return friendModel.avatar_url;
+    if (friendModel.sex === "M") return maleDefaultAvatar;
+    if (friendModel.sex === "F") return femaleDefaultAvatar;
+    else return nbDefaultAvatar;
+  }, [friendModel]);
   const renderSideButton = () => {
     if (friendModel.friendshipModel.friendshipStatus === "accepted") {
       return (
@@ -36,11 +47,9 @@ const FriendCard = ({
       );
     }
     if (friendModel.friendshipModel.friendshipStatus === "pending") {
-      //todo: check if the recieptientid is me, if yes then show the accept and reject buttons
-      //todo: edit the db function so that it returns full friendship data
       if (user?.id === friendModel.friendshipModel.friendshipAddresseeId) {
         return (
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <div
               onClick={() => {
                 onRejectFriendClick(friendModel.friendshipModel.friendshipId);
@@ -91,11 +100,11 @@ const FriendCard = ({
       style={{ borderColor: token.light.borderColor }}
     >
       <div className="flex gap-2 h-full ">
-        <div className="flexCenter">
+        <div className="flexCenter shrink-0">
           <Image
-            src={maleDefaultAvatar}
+            src={displayAvatarUrl}
             alt="avatar_image"
-            className="object-cover rounded-full"
+            className="object-cover rounded-full aspect-square border-2 border-black"
             width={60}
             height={60}
           />

@@ -120,18 +120,19 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
         {renderEmptyMessage()}
 
         <div>
-          {users.map((friend, index) => {
-            return (
-              <FriendCard
-                key={index}
-                friendModel={friend}
-                onAddFriendClick={handleAddFriend}
-                onViewProfileClick={handleOnViewProfile}
-                onAcceptFriendClick={handleAcceptFriendRequest}
-                onRejectFriendClick={handleRejectFriendRequest}
-              />
-            );
-          })}
+          {!isLoading &&
+            users.map((friend, index) => {
+              return (
+                <FriendCard
+                  key={index}
+                  friendModel={friend}
+                  onAddFriendClick={handleAddFriend}
+                  onViewProfileClick={handleOnViewProfile}
+                  onAcceptFriendClick={handleAcceptFriendRequest}
+                  onRejectFriendClick={handleRejectFriendRequest}
+                />
+              );
+            })}
         </div>
       </div>
     </ViewTransition>

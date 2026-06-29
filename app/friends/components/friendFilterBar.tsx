@@ -19,9 +19,12 @@ const FriendFilterBar = ({
         <button
           key={index}
           className={
-            selected === button ? "standardButtonPressed" : "standardButton"
+            selected === button
+              ? "standardButtonPressed text-xs"
+              : "standardButton text-xs"
           }
           style={{
+            width: 100,
             background:
               selected === button
                 ? token.light.blueColor

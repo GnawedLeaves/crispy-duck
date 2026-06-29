@@ -15,7 +15,7 @@ function mapToFriendModel(row: FriendPanelRow): FriendModel {
     created_at: undefined as unknown as string,
     updated_at: undefined as unknown as string,
     birthday: undefined as unknown as string,
-    sex: undefined,
+    sex: row.sex,
     friendshipModel: {
       friendshipStatus: row.friendship_status,
       friendshipId: row.friendship_id ?? "",

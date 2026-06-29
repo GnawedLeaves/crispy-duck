@@ -65,7 +65,11 @@ body {
   box-shadow: inset 2px 2px 0px 0px var(--text-color);
   transform: translate(2px, 2px);
 }
-
+@media (max-width: 640px) {
+  .standardButton {
+    padding: 0.25rem 0.5rem; /* Smaller padding for mobile */
+  }
+}
 .standardButtonPressed {
   padding: 0.5rem 1rem;
   border: 2px solid var(--text-color);

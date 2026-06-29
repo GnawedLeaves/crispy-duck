@@ -238,7 +238,7 @@ const EditProfileModal = ({
             type="text"
             placeholder="Username"
             className="signUpFormField w-full"
-            maxLength={20}
+            maxLength={15}
             value={username}
             onChange={(e) => {
               const sanitized = e.target.value.replace(/[^a-zA-Z0-9_]/g, "");
