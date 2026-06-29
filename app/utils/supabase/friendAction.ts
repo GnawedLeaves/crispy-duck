@@ -97,3 +97,19 @@ export async function cancelFriendRequest(friendshipId: string) {
     .eq("id", friendshipId);
   if (error) throw error;
 }
+
+// in friendAction.ts
+export async function getFriendProfile(friendId: string) {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("profiles_public")
+    .select("id, username, display_name, avatar_url, sex")
+    .eq("id", friendId)
+    .maybeSingle();
+
+  if (error) throw error;
+  console.log({ data });
+  return data;
+}

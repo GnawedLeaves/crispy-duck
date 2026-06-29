@@ -5,15 +5,16 @@ import {
   acceptFriendRequest as acceptFriendRequestAction,
   rejectFriendRequest as rejectFriendRequestAction,
   cancelFriendRequest as cancelFriendRequestAction,
+  getFriendProfile as getFriendProfileAction,
 } from "@/app/utils/supabase/friendAction";
 import { FriendFilterType, FriendModel } from "../types/commonTypes";
 
 const useFriendController = ({
   initialUsers,
 }: {
-  initialUsers: FriendModel[];
+  initialUsers?: FriendModel[];
 }) => {
-  const [users, setUsers] = useState<FriendModel[]>(initialUsers);
+  const [users, setUsers] = useState<FriendModel[] | undefined>(initialUsers);
   const [filter, setFilter] = useState<FriendFilterType>("Friends");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -58,6 +59,11 @@ const useFriendController = ({
     refetch();
   };
 
+  const getFriendProfile = async (friendshipId: string): Promise<any> => {
+    const result = await getFriendProfileAction(friendshipId);
+    return result;
+  };
+
   return {
     users,
     isLoading,
@@ -69,6 +75,7 @@ const useFriendController = ({
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
+    getFriendProfile,
   };
 };
 

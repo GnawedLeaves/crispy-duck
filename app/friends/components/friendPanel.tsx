@@ -26,9 +26,6 @@ const FriendPanel = ({ initialUsers }: FriendPanelProps) => {
     cancelFriendRequest,
   } = useFriendController({ initialUsers });
 
-  useEffect(() => {
-    console.log({ users });
-  }, [users]);
   const filterButtons: FriendFilterType[] = [
     "All",
     "Friends",

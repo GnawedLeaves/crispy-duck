@@ -204,7 +204,7 @@ const EditProfileModal = ({
               alt="profile_picture"
               width={100}
               height={100}
-              className="rounded-full object-cover w-[100px] h-[100px]"
+              className="rounded-full object-cover w-[100px] h-[100px] border-2 border-black"
             />
             <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs">
               Change
