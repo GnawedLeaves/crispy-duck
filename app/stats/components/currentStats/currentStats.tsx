@@ -11,7 +11,12 @@ interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
 }
 
-type DataKey = "Total Weight" | "Fat Percentage" | "Muscle Mass" | "Fat Mass";
+type DataKey =
+  | "Total Weight"
+  | "Fat Percentage"
+  | "Muscle Mass"
+  | "Fat Mass"
+  | "Total Body Water Percentage";
 
 function getAxisRange(
   data: BodyScanDataPoint[],
@@ -62,13 +67,12 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
 
   return (
     <div>
-      {trendData?.length > 0 && (
-        <div className="text-xl">Total Scans: {trendData?.length}</div>
-      )}
-      <br />
+      <div className="text-4xl text-center mb-4 font-bold">
+        Stats ({trendData?.length})
+      </div>
 
       {trendData?.length < 1 && (
-        <div className="flex flex-col gap-2 mt-5">
+        <div className="flex flex-col gap-2 mt-6">
           <div className="text-2xl text-center  ">
             You don't have any scans...{" "}
           </div>
@@ -78,28 +82,21 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
         </div>
       )}
 
+      <div>Latest scan: {latestScan.date}</div>
       {trendData?.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="text-xl font-bold text-center">Current Stats</div>
-          <ProgressBarStatItem
-            title="Total Weight"
-            progressPercentage={latestScan?.["Total Weight"] ?? 0}
-            progressString={`${latestScan?.["Total Weight"] ?? "--"} kg`}
-          />
+        <div className="flex flex-col gap-4 mt-2">
+          {/* <div className="text-xl font-bold text-center">Current Stats</div> */}
           <ProgressBarStatItem
             title="Fat Percentage"
             progressPercentage={latestScan?.["Fat Percentage"] ?? 0}
             progressString={`${latestScan?.["Fat Percentage"] ?? "--"}%`}
           />
           <ProgressBarStatItem
-            title="Muscle Mass"
-            progressPercentage={latestScan?.["Muscle Mass"] ?? 0}
-            progressString={`${latestScan?.["Muscle Mass"] ?? "--"} kg`}
-          />
-          <ProgressBarStatItem
-            title="Fat Mass"
-            progressPercentage={latestScan?.["Fat Mass"] ?? 0}
-            progressString={`${latestScan?.["Fat Mass"] ?? "--"} kg`}
+            title="Total Body Water Percentage"
+            progressPercentage={
+              latestScan?.["Total Body Water Percentage"] ?? 0
+            }
+            progressString={`${latestScan?.["Total Body Water Percentage"] ?? "--"}%`}
           />
         </div>
       )}

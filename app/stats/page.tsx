@@ -20,8 +20,6 @@ const page = async () => {
   return (
     <ViewTransition>
       <div className="contentLayout">
-        <div className="text-4xl text-center mb-4 font-bold">Stats</div>
-
         <CurrentStatsComponent trendData={trendData} />
       </div>
     </ViewTransition>

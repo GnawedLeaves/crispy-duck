@@ -2,6 +2,7 @@
 
 import { createClient } from "@/app/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
+import dayjs from "dayjs";
 import { cookies } from "next/headers";
 
 export interface BodyScanDataPoint {
@@ -10,6 +11,7 @@ export interface BodyScanDataPoint {
   "Fat Percentage": number;
   "Muscle Mass": number;
   "Fat Mass": number;
+  "Total Body Water Percentage": number;
 }
 
 async function fetchBodyScanData(
@@ -19,7 +21,9 @@ async function fetchBodyScanData(
 ): Promise<BodyScanDataPoint[]> {
   const { data, error } = await supabase
     .from("tanita_scans")
-    .select("scan_date, weight, fat_percentage, muscle_mass, fat_mass")
+    .select(
+      "scan_date, weight, fat_percentage, muscle_mass, fat_mass,tbw_percent",
+    )
     .eq("user_id", userId)
     .order("scan_date", { ascending: true })
     .limit(limit);
@@ -27,15 +31,13 @@ async function fetchBodyScanData(
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((row) => ({
-    date: new Date(row.scan_date).toLocaleDateString("en-SG", {
-      month: "short",
-      day: "numeric",
-    }),
+    date: dayjs(row.scan_date).format("DD MMM YYYY"),
     "Total Weight": parseFloat(row.weight),
     "Fat Percentage": parseFloat(row.fat_percentage),
     "Muscle Mass": parseFloat(row.muscle_mass),
     "Fat Mass": parseFloat(row.fat_mass),
-  }));
+    "Total Body Water Percentage": parseFloat(row.tbw_percent),
+  })) as BodyScanDataPoint[];
 }
 
 export async function getBodyScanData(): Promise<BodyScanDataPoint[]> {
