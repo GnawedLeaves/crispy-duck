@@ -12,6 +12,9 @@ export interface BodyScanDataPoint {
   muscleMass: number;
   fatMass: number;
   tbwPercentage: number;
+  metabolicAge: number;
+  bmi: number;
+  visceralFatRating: number;
 }
 
 async function fetchBodyScanData(
@@ -22,7 +25,7 @@ async function fetchBodyScanData(
   const { data, error } = await supabase
     .from("tanita_scans")
     .select(
-      "scan_date, weight, fat_percentage, muscle_mass, fat_mass,tbw_percent",
+      "scan_date, weight, fat_percentage, muscle_mass, fat_mass,tbw_percent, metabolic_age,bmi,visceral_fat_rating",
     )
     .eq("user_id", userId)
     .order("scan_date", { ascending: true })
@@ -32,11 +35,15 @@ async function fetchBodyScanData(
 
   return (data ?? []).map((row) => ({
     date: dayjs(row.scan_date).format("DD MMM YYYY"),
+    axisDate: dayjs(row.scan_date).format("DD MMM YY"),
     totalWeight: parseFloat(row.weight),
     fatpercentage: parseFloat(row.fat_percentage),
     muscleMass: parseFloat(row.muscle_mass),
     fatMass: parseFloat(row.fat_mass),
     tbwPercentage: parseFloat(row.tbw_percent),
+    metabolicAge: parseFloat(row.metabolic_age),
+    bmi: parseFloat(row.bmi),
+    visceralFatRating: parseFloat(row.visceral_fat_rating),
   })) as BodyScanDataPoint[];
 }
 

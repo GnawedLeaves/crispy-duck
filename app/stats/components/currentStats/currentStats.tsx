@@ -11,16 +11,19 @@ interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
 }
 
-type DataKey =
+type ScanDataKey =
   | "totalWeight"
   | "fatpercentage"
   | "muscleMass"
   | "fatMass"
-  | "tbwPercentage";
+  | "tbwPercentage"
+  | "metabolicAge"
+  | "bmi"
+  | "visceralFatRating";
 
 function getAxisRange(
   data: BodyScanDataPoint[],
-  key: DataKey,
+  key: ScanDataKey,
   paddingPct = 0.05,
 ) {
   const values = data.map((d) => d[key]).filter(Boolean);
@@ -44,7 +47,7 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
   });
   const charts: {
     label: string;
-    key: DataKey;
+    key: ScanDataKey;
     formatter: (n: number) => string;
   }[] = [
     {
@@ -63,6 +66,26 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
       formatter: (n) => `${n} kg`,
     },
     { label: "Fat Mass (kg)", key: "fatMass", formatter: (n) => `${n} kg` },
+    {
+      label: "Metabolic Age (years)",
+      key: "metabolicAge",
+      formatter: (n) => `${n}`,
+    },
+    {
+      label: "BMI",
+      key: "bmi",
+      formatter: (n) => `${n}`,
+    },
+    {
+      label: "Total Body Water (%)",
+      key: "tbwPercentage",
+      formatter: (n) => `${n} %`,
+    },
+    // {
+    //   label: "Visceral Fat Rating",
+    //   key: "visceralFatRating",
+    //   formatter: (n) => `${n}`,
+    // },
   ];
 
   return (
@@ -100,20 +123,30 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
 
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-6 mt-6 ">
-          {charts.map(({ label, key, formatter }) => (
-            <div key={key} className="cardWithShadow">
-              <div className="text-2xl font-semibold mb-1">{label}</div>
-              <LineChart
-                className="h-48"
-                data={trendData}
-                index="date"
-                categories={[key]}
-                valueFormatter={formatter}
-                onValueChange={(v: any) => console.log(v)}
-                {...getAxisRange(trendData, key)}
-              />
-            </div>
-          ))}
+          {charts.map(({ label, key, formatter }) => {
+            // Create a temporary data array where the raw data key
+            // is cloned onto a property named after your pretty label
+            const chartFriendlyData = trendData.map((item) => ({
+              ...item,
+              [label]: item[key],
+            }));
+
+            return (
+              <div key={key} className="cardWithShadow">
+                <div className="text-2xl font-semibold mb-1">{label}</div>
+                <LineChart
+                  className="h-48 "
+                  data={chartFriendlyData}
+                  colors={["amber"]}
+                  index="axisDate"
+                  categories={[label]}
+                  valueFormatter={formatter}
+                  onValueChange={(v: any) => {}}
+                  {...getAxisRange(trendData, key)}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
