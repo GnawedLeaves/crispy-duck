@@ -37,7 +37,7 @@ interface ScannerViewProps {
 type ViewStep = "scan" | "edit" | "success";
 
 const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
-  const [step, setStep] = useState<ViewStep>("edit");
+  const [step, setStep] = useState<ViewStep>("scan");
   const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [rawResult, setRawResult] = useState<string>("");
