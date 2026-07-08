@@ -3,10 +3,11 @@
 import useFriendController from "@/app/friends/friendController";
 import CurrentStatsComponent from "@/app/stats/components/currentStats/currentStats";
 import { token } from "@/app/theme";
-import { handleEmptyProfilePic } from "@/app/utils/common";
+import { handleEmptyProfilePic, withDelay } from "@/app/utils/common";
 import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
 import dayjs from "dayjs";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface FriendContentProps {
@@ -16,7 +17,7 @@ interface FriendContentProps {
 
 const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
   const { getFriendProfile } = useFriendController({});
-
+  const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +25,6 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
     const fetchProfile = async () => {
       setLoading(true);
       const friendProfile = await getFriendProfile(friendId);
-      console.log({ friendProfile });
       setProfile(friendProfile);
       setLoading(false);
     };
@@ -35,6 +35,9 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
   if (loading) return <div>Loading profile...</div>;
   if (!profile) return <div>Profile not found.</div>;
 
+  const handleCompareClick = withDelay(() => {
+    router.push(`/profile/compare/${friendId}`);
+  });
   return (
     <div>
       <div className="flex gap-6">
@@ -50,18 +53,31 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
           <div className="text-sm">@{profile.username}</div>
         </div>
       </div>
-      <div className="flex flex-col gap-1 my-4">
-        <div className="text-md">
-          Date Joined: {dayjs(profile.created_at).format("DD MMM YYYY")}
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-1 my-4">
+          <div className="text-md">
+            Date Joined: {dayjs(profile.created_at).format("DD MMM YYYY")}
+          </div>
+          <div className="text-md">
+            Birthday: {dayjs(profile.birthday).format("DD MMM YYYY")}
+          </div>
         </div>
-        <div className="text-md">
-          Birthday: {dayjs(profile.birthday).format("DD MMM YYYY")}
+        <div>
+          <button
+            className="standardButton"
+            style={{ background: token.light.primaryColor }}
+            onClick={handleCompareClick}
+          >
+            Compare Stats
+          </button>
         </div>
       </div>
+
       <div
         className="w-full border-t-2"
         style={{ borderColor: token.light.borderColor }}
       ></div>
+
       <div className="mt-6">
         <CurrentStatsComponent
           trendData={friendTrendData}

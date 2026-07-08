@@ -5,24 +5,15 @@ import ProgressBarStatItem from "./progressBarStatItem";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
 import { useRouter } from "next/navigation";
 import { withDelay } from "@/app/utils/common";
-import { startTransition, ViewTransition } from "react";
+import { startTransition } from "react";
+import { ScanDataKey } from "@/app/types/commonTypes";
 
 interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
   isViewingFriend?: boolean;
 }
 
-type ScanDataKey =
-  | "totalWeight"
-  | "fatpercentage"
-  | "muscleMass"
-  | "fatMass"
-  | "tbwPercentage"
-  | "metabolicAge"
-  | "bmi"
-  | "visceralFatRating";
-
-function getAxisRange(
+export function getAxisRange(
   data: BodyScanDataPoint[],
   key: ScanDataKey,
   paddingPct = 0.05,

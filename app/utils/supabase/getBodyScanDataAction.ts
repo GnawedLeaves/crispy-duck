@@ -15,6 +15,7 @@ export interface BodyScanDataPoint {
   metabolicAge: number;
   bmi: number;
   visceralFatRating: number;
+  axisDate: string;
 }
 
 async function fetchBodyScanData(

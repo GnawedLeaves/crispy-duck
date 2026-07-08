@@ -87,3 +87,21 @@ export interface FriendPanelRow {
 }
 
 export type FriendFilterType = "All" | "Friends" | "Pending" | "Strangers";
+
+export type ScanDataKey =
+  | "totalWeight"
+  | "fatpercentage"
+  | "muscleMass"
+  | "fatMass"
+  | "tbwPercentage"
+  | "metabolicAge"
+  | "bmi"
+  | "visceralFatRating";
+
+export type ComparisonScanDataKey = "My Weight" | "Friend Weight";
+
+export interface ComparisonDataPoint {
+  [x: string]: any;
+  axisDate: string;
+}
+[];

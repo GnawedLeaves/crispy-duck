@@ -3,6 +3,11 @@ import maleDefaultAvatar from "../assets/default_profile_pic_male.png";
 import femaleDefaultAvatar from "../assets/default_profile_pic_female.png";
 import nbDefaultAvatar from "../assets/default_profile_pic_NA.png";
 
+export interface ComparisonDataPoint {
+  axisDate: string;
+  [key: string]: string | number | undefined;
+}
+
 export const withDelay = <T extends any[]>(
   callback: (...args: T) => void,
   ms: number = 300,
@@ -111,3 +116,60 @@ export const handleEmptyProfilePic = (sex?: string, avatar_url?: any) => {
   if (sex === "F") return femaleDefaultAvatar;
   return nbDefaultAvatar;
 };
+
+type DataPoint = { axisDate: string; [key: string]: any };
+
+interface MergeConfig {
+  userLabel: string; // e.g., "My Weight"
+  friendLabel: string; // e.g., "Friend Weight"
+  dataKey: string; // e.g., "totalWeight"
+}
+
+export function mergeAndFillTrendData(
+  userData: DataPoint[],
+  friendData: DataPoint[],
+  config: MergeConfig,
+): ComparisonDataPoint[] {
+  const { userLabel, friendLabel, dataKey } = config;
+
+  // 1. Gather all unique dates across both arrays and sort them chronologically
+  const allDates = Array.from(
+    new Set([
+      ...userData.map((d) => d.axisDate),
+      ...friendData.map((d) => d.axisDate),
+    ]),
+  ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  // Convert arrays to quick-lookup maps keyed by date
+  const userMap = new Map(userData.map((d) => [d.axisDate, d[dataKey]]));
+  const friendMap = new Map(friendData.map((d) => [d.axisDate, d[dataKey]]));
+
+  // Keep track of the last seen valid numbers for forward-filling
+  let lastUserValue: number | null = null;
+  let lastFriendValue: number | null = null;
+
+  // 2. Iterate through the master timeline and fill gaps
+  const comparisonData = allDates.map((date) => {
+    // Check if there's a new value on this date; otherwise, fallback to the last seen value
+    const currentUserValue = userMap.has(date)
+      ? userMap.get(date)
+      : lastUserValue;
+    const currentFriendValue = friendMap.has(date)
+      ? friendMap.get(date)
+      : lastFriendValue;
+
+    // Update our "previous data point" trackers for the next loop iteration
+    if (currentUserValue !== null) lastUserValue = currentUserValue;
+    if (currentFriendValue !== null) lastFriendValue = currentFriendValue;
+
+    return {
+      axisDate: date,
+      [userLabel]: currentUserValue,
+      [friendLabel]: currentFriendValue,
+    };
+  });
+
+  // Optional: If a user or friend doesn't have a value for the absolute earliest date,
+  // you might want to backward-fill it or filter it out so it doesn't show null.
+  return comparisonData;
+}
