@@ -62,15 +62,17 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
             Birthday: {dayjs(profile.birthday).format("DD MMM YYYY")}
           </div>
         </div>
-        <div>
-          <button
-            className="standardButton"
-            style={{ background: token.light.primaryColor }}
-            onClick={handleCompareClick}
-          >
-            Compare Stats
-          </button>
-        </div>
+        {friendTrendData.length > 0 && (
+          <div>
+            <button
+              className="standardButton"
+              style={{ background: token.light.primaryColor }}
+              onClick={handleCompareClick}
+            >
+              Compare Stats
+            </button>
+          </div>
+        )}
       </div>
 
       <div
