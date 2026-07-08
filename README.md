@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+# 📄 Crispy Duck (Body Data Scan Collector)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A modern Next.js web application designed to digitize, store, and share physical body composition metrics. Inspired by the need to replace easily lost physical paper printouts from NTUC body scan machines, this app transforms paper data into actionable, shareable digital insights.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **📷 Intelligent Scanning:** Uses advanced AI to extract data points directly from photos of physical body scan printouts.
+* **📊 Interactive Dashboards:** Visualizes your fitness journey and body composition trends over time with beautiful, responsive charts.
+* **🔒 Secure Cloud Storage:** Safely stores your historical scan data and profiles.
+* **🤝 Easy Sharing:** Seamlessly share your progress and body scan metrics with friends or personal trainers.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Layer | Technology Used |
+| --- | --- |
+| **Framework** | **Next.js** (App Router) |
+| **Database & Auth** | **Supabase** |
+| **AI / Document Processing** | **Google Cloud Document AI** |
+| **Data Visualization** | **Tremor Charts** |
+| **Styling & UI Components** | **Tailwind CSS** + **DaisyUI** |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🚀 Motivation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+i was tired of taking pics and i can only compare the previous scan on my phone there werent any trends so i made this to keep track of body trends thats it 
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
