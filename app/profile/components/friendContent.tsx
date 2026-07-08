@@ -46,7 +46,7 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
           className="object-cover rounded-full aspect-square border-2 border-black"
         />
         <div className="flex flex-col justify-center gap-1">
-          <div className="text-3xl">{profile.display_name}</div>
+          <div className="text-3xl font-bold">{profile.display_name}</div>
           <div className="text-sm">@{profile.username}</div>
         </div>
       </div>

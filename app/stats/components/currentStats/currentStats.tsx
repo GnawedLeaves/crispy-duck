@@ -94,7 +94,7 @@ const CurrentStatsComponent = ({
 
   return (
     <div>
-      <div className="text-4xl text-center mb-4 font-bold">
+      <div className="text-3xl text-center mb-4 font-bold">
         Stats ({trendData?.length})
       </div>
 
