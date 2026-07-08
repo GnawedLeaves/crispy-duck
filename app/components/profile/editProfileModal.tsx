@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/app/context/AuthContext";
 import { NativeBirthdayPicker } from "../birthdayPicker/NativeBirthdayPicker";
 import { token } from "@/app/theme";
+import { handleEmptyProfilePic } from "@/app/utils/common";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const USERNAME_MIN_LENGTH = 7;
@@ -127,9 +128,13 @@ const EditProfileModal = ({
           setIsSubmitting(false);
           return;
         }
-        avatarUrl = url;
-      }
 
+        // SANITY CHECK: Ensure 'url' is a string, not an object response
+        avatarUrl =
+          typeof url === "object" && url !== null
+            ? (url as any).url || (url as any).path
+            : url;
+      }
       const { error } = await updateUserProfile({
         userId: existingUser.id,
         display_name: displayName,
@@ -198,8 +203,10 @@ const EditProfileModal = ({
             <Image
               src={
                 avatarPreview ||
-                existingUser?.profile?.avatar_url ||
-                "/default-avatar.png"
+                handleEmptyProfilePic(
+                  existingUser?.profile?.sex,
+                  existingUser?.profile?.avatar_url,
+                )
               }
               alt="profile_picture"
               width={100}

@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import EditProfileModal from "./editProfileModal";
-import { withDelay } from "@/app/utils/common";
+import { handleEmptyProfilePic, withDelay } from "@/app/utils/common";
 import { signOutAction } from "@/app/utils/login/authUtils";
 import { useRouter } from "next/navigation";
 import CustomModal from "../modal/customModal";
@@ -108,7 +108,10 @@ const ProfileBanner = () => {
           <Image
             width={100}
             height={100}
-            src={user?.profile?.avatar_url ?? "/default-avatar.png"}
+            src={handleEmptyProfilePic(
+              user?.profile?.sex,
+              user?.profile?.avatar_url,
+            )}
             alt="avatar_image"
             className="rounded-full object-cover w-18 h-18 border-2 border-black"
           />

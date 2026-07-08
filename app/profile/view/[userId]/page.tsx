@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Image from "next/image";
 import React from "react";
 import FriendContent from "../../components/friendContent";
+import { getBodyScanDataFromFriend } from "@/app/utils/supabase/getBodyScanDataAction";
 interface PageProps {
   params: Promise<{ userId: string }>;
 }
@@ -25,8 +26,12 @@ const ViewProfilePage = async ({ params }: PageProps) => {
   };
 
   const renderFriendContent = () => {
-    return <FriendContent friendId={userId} />;
+    return (
+      <FriendContent friendId={userId} friendTrendData={friendTrendData} />
+    );
   };
+
+  const friendTrendData = await getBodyScanDataFromFriend(userId);
   return (
     <div className="contentLayout">
       {/* ViewProfilePage for user: {userId} */}

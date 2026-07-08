@@ -98,9 +98,16 @@ export function parseTautaScan(rawText: string) {
   return data as ITautaScanData;
 }
 
-export const handleEmptyProfilePic = (sex?: string, avatar_url?: string) => {
-  if (avatar_url) return avatar_url;
+export const handleEmptyProfilePic = (sex?: string, avatar_url?: any) => {
+  if (
+    avatar_url &&
+    typeof avatar_url === "string" &&
+    !avatar_url.includes("[object Object]")
+  ) {
+    return avatar_url;
+  }
+
   if (sex === "M") return maleDefaultAvatar;
   if (sex === "F") return femaleDefaultAvatar;
-  else return nbDefaultAvatar;
+  return nbDefaultAvatar;
 };

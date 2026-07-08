@@ -9,6 +9,7 @@ import { startTransition, ViewTransition } from "react";
 
 interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
+  isViewingFriend?: boolean;
 }
 
 type ScanDataKey =
@@ -37,7 +38,10 @@ function getAxisRange(
   };
 }
 
-const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
+const CurrentStatsComponent = ({
+  trendData,
+  isViewingFriend = false,
+}: CurrentStatsComponentProps) => {
   const latestScan = trendData?.[trendData.length - 1];
   const router = useRouter();
   const handlePushToScan = withDelay(() => {
@@ -97,15 +101,18 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
       {trendData?.length < 1 && (
         <div className="flex flex-col gap-2 mt-6">
           <div className="text-2xl text-center  ">
-            You don't have any scans...{" "}
+            {isViewingFriend
+              ? "Your friend doesn't have any scans. Tell them to start scanning!"
+              : "You don't have any scans..."}
           </div>
-          <button className="standardButton" onClick={handlePushToScan}>
-            Start scanning
-          </button>
+          {!isViewingFriend && (
+            <button className="standardButton" onClick={handlePushToScan}>
+              Start scanning
+            </button>
+          )}
         </div>
       )}
-
-      <div>Latest scan: {latestScan.date}</div>
+      {latestScan?.date && <div>Latest scan: {latestScan?.date}</div>}
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-4 mt-2">
           <ProgressBarStatItem

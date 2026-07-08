@@ -58,6 +58,15 @@ export async function getBodyScanData(): Promise<BodyScanDataPoint[]> {
   return fetchBodyScanData(supabase, user.id);
 }
 
+export async function getBodyScanDataFromFriend(
+  userId: string,
+): Promise<BodyScanDataPoint[]> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  return fetchBodyScanData(supabase, userId);
+}
+
 // New: same query, different user_id — RLS does the gating.
 // Returns [] (not an error) if the target isn't a friend, since
 // the policy just filters rows rather than throwing.
