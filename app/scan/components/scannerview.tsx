@@ -2,17 +2,91 @@
 
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
-import { ProcessScanResponse } from "@/app/utils/supabase/scanAction";
+import {
+  processScanFile,
+  uploadScanToStorage,
+} from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
 import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
 import Link from "next/link";
-import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
 import { token } from "@/app/theme";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
 const OPTIONAL_FIELDS = ["degreeOfObesity", "idealBodyWeight"];
+
+type ScanProgressStage = "upload" | "processing" | "retrieving";
+
+interface ScanProgressStep {
+  id: ScanProgressStage;
+  label: string;
+  done: boolean;
+  active: boolean;
+}
+
+const createDefaultProgressSteps = (): ScanProgressStep[] => [
+  {
+    id: "upload",
+    label: "Uploading image to database",
+    done: false,
+    active: true,
+  },
+  {
+    id: "processing",
+    label: "Reading your scan with Google Doc AI",
+    done: false,
+    active: false,
+  },
+  {
+    id: "retrieving",
+    label: "Retrieving your results",
+    done: false,
+    active: false,
+  },
+];
+
+const getProgressPercent = (steps: ScanProgressStep[]) => {
+  const completed = steps.filter((step) => step.done).length;
+  return Math.round((completed / steps.length) * 100);
+};
+
+const ScanProgressChecklist = ({ steps }: { steps: ScanProgressStep[] }) => {
+  const progress = getProgressPercent(steps);
+
+  return (
+    <div className="cardWithShadow w-full max-w-md px-4 py-4">
+      <div className="mb-3 h-2 overflow-hidden rounded-full bg-gray-200">
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${progress}%`,
+            background: token.light.primaryColor,
+          }}
+        />
+      </div>
+
+      <ul className="flex flex-col gap-2 text-sm">
+        {steps.map((step) => {
+          const icon = step.done ? "✓" : step.active ? "●" : "○";
+          const isActive = step.active && !step.done;
+
+          return (
+            <li
+              key={step.id}
+              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
+                isActive ? "font-semibold" : "opacity-70"
+              }`}
+            >
+              <span className="min-w-4 text-base">{icon}</span>
+              <span>{step.label}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
 
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -30,7 +104,7 @@ const countEmptyRequiredFields = (data: Record<string, any>): number =>
   ).length;
 
 interface ScannerViewProps {
-  handleFileUpload: (file: File) => Promise<ProcessScanResponse | undefined>;
+  handleFileUpload: (file: File) => Promise<any>;
   currentUserId: string;
 }
 
@@ -44,6 +118,10 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const [loading, setLoading] = useState(false);
   const [scanData, setScanData] = useState<ITautaScanData | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [progressSteps, setProgressSteps] = useState<ScanProgressStep[]>(
+    createDefaultProgressSteps(),
+  );
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
   // On mount: restore draft from cookie if one exists
   useEffect(() => {
@@ -61,6 +139,9 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setImagePreview(null);
     setRawResult("");
     setScanError(null);
+    setLoading(false);
+    setProgressSteps(createDefaultProgressSteps());
+    setProgressMessage(null);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,13 +172,56 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
 
   const handleConfirmUpload = withDelay(async () => {
     if (!inputFile) return;
+
     setLoading(true);
-    const data = await handleFileUpload(inputFile);
-    const text = data?.data.text;
-    if (text) {
-      setRawResult(text);
+    setScanError(null);
+    setProgressSteps(createDefaultProgressSteps());
+    setProgressMessage("Preparing your scan...");
+
+    const uploadResult = await uploadScanToStorage(inputFile);
+    if (!uploadResult.success || !uploadResult.filePath) {
+      setScanError(
+        uploadResult.error ??
+          "We could not upload your scan image. Please try again.",
+      );
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    setProgressSteps((prev) =>
+      prev.map((step) =>
+        step.id === "upload"
+          ? { ...step, done: true, active: false }
+          : step.id === "processing"
+            ? { ...step, active: true }
+            : step,
+      ),
+    );
+    setProgressMessage("Reading your scan with Google AI...");
+
+    const data = await processScanFile(
+      uploadResult.filePath,
+      uploadResult.mimeType ?? inputFile.type,
+    );
+    const text = data?.data.text;
+
+    if (!text) {
+      setScanError("We could not read this scan. Please try a clearer image.");
+      setLoading(false);
+      return;
+    }
+
+    setProgressSteps((prev) =>
+      prev.map((step) =>
+        step.id === "processing"
+          ? { ...step, done: true, active: false }
+          : step.id === "retrieving"
+            ? { ...step, active: true }
+            : step,
+      ),
+    );
+    setProgressMessage("Collecting your scan details...");
+    setRawResult(text);
   });
 
   const handleReplaceImage = withDelay(resetScanState);
@@ -114,11 +238,27 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     );
     if (emptyCount >= EMPTY_FIELDS_THRESHOLD) {
       setScanError(
-        `This image doesn't look like a valid Tanita scan — ${emptyCount} fields couldn't be read. Please upload a clearer photo of the printout.`,
+        `This image doesn't look like a valid Tanita scan: ${emptyCount} fields couldn't be read. Please upload a clearer photo of the printout.`,
       );
+      setProgressSteps((prev) =>
+        prev.map((step) =>
+          step.id === "retrieving" ? { ...step, active: false } : step,
+        ),
+      );
+      setLoading(false);
       return;
     }
+
+    setProgressSteps((prev) =>
+      prev.map((step) =>
+        step.id === "retrieving"
+          ? { ...step, done: true, active: false }
+          : step,
+      ),
+    );
+    setProgressMessage("Scan is ready to review.");
     setScanData(processedResult as ITautaScanData);
+    setLoading(false);
     setStep("edit");
   }, [processedResult]);
 
@@ -187,18 +327,15 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         )}
 
         {loading ? (
-          <div className="flex flex-col gap-4 items-center text-center">
-            <span className="loading loading-spinner loading-md" />
-            <AnimatedLoadingText
-              messages={[
-                "Analyzing your data...",
-                "Generating insights...",
-                "Finding relevant information...",
-                "Preparing your response...",
-                "Almost there...",
-              ]}
-              interval={5000}
-            />
+          <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+            <div className="flex items-center gap-3">
+              <span className="loading loading-spinner loading-md" />
+              <p className="font-semibold">Scanning your image...</p>
+            </div>
+            {progressMessage && (
+              <p className="text-sm opacity-60">{progressMessage}</p>
+            )}
+            <ScanProgressChecklist steps={progressSteps} />
           </div>
         ) : inputFile ? (
           <div className="flexCenter gap-4">

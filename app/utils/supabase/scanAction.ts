@@ -2,9 +2,9 @@
 
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { createClient } from "@/app/utils/supabase/server";
-import { User } from "@supabase/supabase-js";
 import dayjs from "dayjs";
 import { cookies } from "next/headers";
+
 export interface ProcessScanResponse {
   success: boolean;
   data: ScanData;
@@ -15,8 +15,20 @@ export interface ScanData {
   mimeType: string;
   pagesCount: number;
 }
-export async function handleFileUpload(file: File) {
-  if (!file) return;
+
+export interface StorageUploadResult {
+  success: boolean;
+  filePath?: string;
+  mimeType?: string;
+  error?: string;
+}
+
+export async function uploadScanToStorage(
+  file: File,
+): Promise<StorageUploadResult> {
+  if (!file) {
+    return { success: false, error: "No file was provided." };
+  }
 
   try {
     const cookieStore = await cookies();
@@ -25,7 +37,6 @@ export async function handleFileUpload(file: File) {
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `uploads/${Date.now()}_${fileName}`;
-    console.log("scan", { fileExt, fileName, filePath });
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("scans")
@@ -35,16 +46,39 @@ export async function handleFileUpload(file: File) {
         upsert: false,
       });
 
-    console.log("scan", { storageData, storageError });
-
-    if (storageError)
+    if (storageError) {
       throw new Error(`Storage upload failed: ${storageError.message}`);
+    }
+
+    return {
+      success: true,
+      filePath: storageData.path,
+      mimeType: file.type,
+    };
+  } catch (err: any) {
+    console.error(err);
+    return {
+      success: false,
+      error: err?.message ?? "We could not upload your scan image.",
+    };
+  }
+}
+
+export async function processScanFile(
+  filePath: string,
+  mimeType: string,
+): Promise<ProcessScanResponse | undefined> {
+  if (!filePath || !mimeType) return;
+
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
 
     const { data: functionData, error: functionError } =
       await supabase.functions.invoke("process-scan", {
         body: {
-          filePath: storageData.path,
-          mimeType: file.type,
+          filePath,
+          mimeType,
         },
       });
 
@@ -58,11 +92,22 @@ export async function handleFileUpload(file: File) {
 
       throw new Error(`Edge function failed: ${functionError.message}`);
     }
-    console.log("✅ Edge Function Success Data:", functionData);
+
     return functionData as ProcessScanResponse;
   } catch (err: any) {
     console.error(err);
   }
+}
+
+export async function handleFileUpload(file: File) {
+  const uploadResult = await uploadScanToStorage(file);
+
+  if (!uploadResult.success || !uploadResult.filePath) return;
+
+  return processScanFile(
+    uploadResult.filePath,
+    uploadResult.mimeType ?? file.type,
+  );
 }
 
 export const uploadScanData = async (
