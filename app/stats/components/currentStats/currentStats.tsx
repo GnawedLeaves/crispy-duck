@@ -12,11 +12,11 @@ interface CurrentStatsComponentProps {
 }
 
 type DataKey =
-  | "Total Weight"
-  | "Fat Percentage"
-  | "Muscle Mass"
-  | "Fat Mass"
-  | "Total Body Water Percentage";
+  | "totalWeight"
+  | "fatpercentage"
+  | "muscleMass"
+  | "fatMass"
+  | "tbwPercentage";
 
 function getAxisRange(
   data: BodyScanDataPoint[],
@@ -49,20 +49,20 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
   }[] = [
     {
       label: "Total Weight (kg)",
-      key: "Total Weight",
+      key: "totalWeight",
       formatter: (n) => `${n} kg`,
     },
     {
       label: "Fat Percentage (%)",
-      key: "Fat Percentage",
+      key: "fatpercentage",
       formatter: (n) => `${n}%`,
     },
     {
       label: "Muscle Mass (kg)",
-      key: "Muscle Mass",
+      key: "muscleMass",
       formatter: (n) => `${n} kg`,
     },
-    { label: "Fat Mass (kg)", key: "Fat Mass", formatter: (n) => `${n} kg` },
+    { label: "Fat Mass (kg)", key: "fatMass", formatter: (n) => `${n} kg` },
   ];
 
   return (
@@ -85,18 +85,15 @@ const CurrentStatsComponent = ({ trendData }: CurrentStatsComponentProps) => {
       <div>Latest scan: {latestScan.date}</div>
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-4 mt-2">
-          {/* <div className="text-xl font-bold text-center">Current Stats</div> */}
           <ProgressBarStatItem
-            title="Fat Percentage"
-            progressPercentage={latestScan?.["Fat Percentage"] ?? 0}
-            progressString={`${latestScan?.["Fat Percentage"] ?? "--"}%`}
+            title="Fat %"
+            progressPercentage={latestScan?.["fatpercentage"] ?? 0}
+            progressString={`${latestScan?.["fatpercentage"] ?? "--"}%`}
           />
           <ProgressBarStatItem
-            title="Total Body Water Percentage"
-            progressPercentage={
-              latestScan?.["Total Body Water Percentage"] ?? 0
-            }
-            progressString={`${latestScan?.["Total Body Water Percentage"] ?? "--"}%`}
+            title="Total Body Water %"
+            progressPercentage={latestScan?.["tbwPercentage"] ?? 0}
+            progressString={`${latestScan?.["tbwPercentage"] ?? "--"}%`}
           />
         </div>
       )}

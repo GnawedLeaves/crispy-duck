@@ -7,11 +7,11 @@ import { cookies } from "next/headers";
 
 export interface BodyScanDataPoint {
   date: string;
-  "Total Weight": number;
-  "Fat Percentage": number;
-  "Muscle Mass": number;
-  "Fat Mass": number;
-  "Total Body Water Percentage": number;
+  totalWeight: number;
+  fatpercentage: number;
+  muscleMass: number;
+  fatMass: number;
+  tbwPercentage: number;
 }
 
 async function fetchBodyScanData(
@@ -32,11 +32,11 @@ async function fetchBodyScanData(
 
   return (data ?? []).map((row) => ({
     date: dayjs(row.scan_date).format("DD MMM YYYY"),
-    "Total Weight": parseFloat(row.weight),
-    "Fat Percentage": parseFloat(row.fat_percentage),
-    "Muscle Mass": parseFloat(row.muscle_mass),
-    "Fat Mass": parseFloat(row.fat_mass),
-    "Total Body Water Percentage": parseFloat(row.tbw_percent),
+    totalWeight: parseFloat(row.weight),
+    fatpercentage: parseFloat(row.fat_percentage),
+    muscleMass: parseFloat(row.muscle_mass),
+    fatMass: parseFloat(row.fat_mass),
+    tbwPercentage: parseFloat(row.tbw_percent),
   })) as BodyScanDataPoint[];
 }
 
