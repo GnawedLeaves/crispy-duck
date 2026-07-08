@@ -2,7 +2,7 @@
 
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { uploadScanData } from "@/app/utils/supabase/scanAction";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { withDelay } from "@/app/utils/common";
 import { NativeBirthdayPicker } from "@/app/components/birthdayPicker/NativeBirthdayPicker";
@@ -87,6 +87,99 @@ export const loadDraftFromCookie = (): DraftCookiePayload | null => {
   }
 };
 
+// Try to infer which field caused a server error based on error message
+const parseServerError = (
+  errorMessage: string,
+  formData: ITautaScanData,
+): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  // Common patterns: "numeric field overflow", "value too large", "out of range"
+  if (
+    errorMessage.toLowerCase().includes("numeric") ||
+    errorMessage.toLowerCase().includes("overflow") ||
+    errorMessage.toLowerCase().includes("out of range")
+  ) {
+    // Check which numeric fields have suspicious values and flag them
+    const numericFields: Array<keyof ITautaScanData> = [
+      "weight",
+      "clothesWeight",
+      "fatPercentage",
+      "fatMass",
+      "ffm",
+      "muscleMass",
+      "tbw",
+      "tbwPercent",
+      "boneMass",
+      "bmr",
+      "metabolicAge",
+      "visceralFatRating",
+      "bmi",
+      "degreeOfObesity",
+      "idealBodyWeight",
+    ];
+
+    numericFields.forEach((field) => {
+      const value = formData[field];
+      if (value !== null && value !== undefined && value !== "") {
+        errors[field] = "Check value (may be too large or invalid)";
+      }
+    });
+
+    if (Object.keys(errors).length === 0) {
+      // Fallback if we can't identify specific field
+      errors._server = errorMessage;
+    }
+  }
+
+  // Invalid time/date errors
+  if (
+    errorMessage.toLowerCase().includes("invalid date") ||
+    errorMessage.toLowerCase().includes("time")
+  ) {
+    errors.scanDate = "Check date format";
+    errors.scanTime = "Check time format";
+  }
+
+  return errors;
+};
+
+// Validate form data and return errors
+const validateFormData = (data: ITautaScanData): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  // Check required fields
+  const requiredFields: Array<keyof ITautaScanData> = Object.keys(
+    FIELD_LABELS,
+  ).filter(
+    (key) => !OPTIONAL_FIELDS.includes(key as keyof ITautaScanData),
+  ) as Array<keyof ITautaScanData>;
+
+  requiredFields.forEach((field) => {
+    const value = data[field];
+    if (value === null || value === undefined || value === "") {
+      errors[field] = "Required";
+    }
+  });
+
+  // Validate time format specifically
+  if (data.scanTime && data.scanTime !== "") {
+    // Check if it's a valid HH:mm format
+    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(String(data.scanTime))) {
+      errors.scanTime = "Invalid time format (HH:mm)";
+    }
+  }
+
+  // Validate date format
+  if (data.scanDate && data.scanDate !== "") {
+    if (!dayjs(String(data.scanDate), "YYYY-MM-DD", true).isValid()) {
+      errors.scanDate = "Invalid date format (YYYY-MM-DD)";
+    }
+  }
+
+  return errors;
+};
+
 const EditFormView = ({
   initialData,
   currentUserId,
@@ -100,7 +193,13 @@ const EditFormView = ({
   if (rawDate) {
     const parsed = dayjs(rawDate);
     if (parsed.isValid()) {
-      formattedDate = parsed.format("YYYY-MM-DD");
+      // Check if date is in the future, if so default to today
+      const today = dayjs();
+      if (parsed.isAfter(today, "day")) {
+        formattedDate = today.format("YYYY-MM-DD");
+      } else {
+        formattedDate = parsed.format("YYYY-MM-DD");
+      }
     }
   }
 
@@ -117,6 +216,8 @@ const EditFormView = ({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // persist draft to cookie on every change (imagePreview stored in sessionStorage)
   useEffect(() => {
@@ -127,6 +228,19 @@ const EditFormView = ({
     clearDraftCookie();
     onBack();
   });
+
+  const scrollToFirstError = (errors: Record<string, string>) => {
+    const firstErrorField = Object.keys(errors)[0];
+    if (firstErrorField && fieldRefs.current[firstErrorField]) {
+      setTimeout(() => {
+        fieldRefs.current[firstErrorField]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 0);
+    }
+  };
+
   const handleChange = (key: keyof ITautaScanData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -137,9 +251,35 @@ const EditFormView = ({
   const handleSubmit = withDelay(async () => {
     setLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    // Client-side validation
+    const validationErrors = validateFormData(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      scrollToFirstError(validationErrors);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error: dbError } = await uploadScanData(formData, currentUserId);
-      if (dbError) throw new Error(dbError.message);
+      if (dbError) {
+        // Try to parse server error to identify problematic field
+        const errorMessage = dbError.message;
+        const fieldErrorMapping = parseServerError(errorMessage, formData);
+
+        if (Object.keys(fieldErrorMapping).length > 0) {
+          setFieldErrors(fieldErrorMapping);
+          scrollToFirstError(fieldErrorMapping);
+          setError(
+            "Please check the highlighted fields and correct any issues.",
+          );
+        } else {
+          setError(errorMessage ?? "Something went wrong. Please try again.");
+        }
+        return;
+      }
       clearDraftCookie();
       onSuccess();
     } catch (err: any) {
@@ -177,43 +317,74 @@ const EditFormView = ({
       </div>
 
       <div className="cardWithShadow w-full flex flex-col gap-3">
-        {fieldEntries.map(([key, label]) => (
-          <div key={key} className="flex flex-col gap-1">
-            <label className="text-xs font-semibold uppercase tracking-wide opacity-60">
-              {label}
-              {OPTIONAL_FIELDS.includes(key) && (
-                <span className="ml-1 normal-case opacity-40">(optional)</span>
-              )}
-            </label>
+        {fieldEntries.map(([key, label]) => {
+          const hasError = !!fieldErrors[key];
+          return (
+            <div
+              key={key}
+              ref={(el) => {
+                if (el) fieldRefs.current[key] = el;
+              }}
+              className="flex flex-col gap-1"
+            >
+              <label
+                className={`text-xs font-semibold uppercase tracking-wide ${
+                  hasError ? "text-red-500" : "opacity-60"
+                }`}
+              >
+                {label}
+                {OPTIONAL_FIELDS.includes(key) && (
+                  <span className="ml-1 normal-case opacity-40">
+                    (optional)
+                  </span>
+                )}
+              </label>
 
-            {key === "scanDate" ? (
-              <NativeBirthdayPicker
-                value={formData.scanDate ? String(formData.scanDate) : ""}
-                onChange={(dateString) => handleChange("scanDate", dateString)}
-                placeholder="Select scan date"
-              />
-            ) : key === "scanTime" ? (
-              <input
-                type="time"
-                value={formData.scanTime ? String(formData.scanTime) : ""}
-                onChange={(e) => handleChange("scanTime", e.target.value)}
-                className="signUpFormField text-sm w-full bg-transparent outline-none"
-              />
-            ) : (
-              <input
-                type="number"
-                value={
-                  formData[key] === null || formData[key] === undefined
-                    ? ""
-                    : String(formData[key])
-                }
-                onChange={(e) => handleChange(key, e.target.value)}
-                placeholder={OPTIONAL_FIELDS.includes(key) ? "—" : ""}
-                className="signUpFormField text-sm w-full bg-transparent outline-none"
-              />
-            )}
-          </div>
-        ))}
+              {key === "scanDate" ? (
+                <div
+                  className={hasError ? "border border-red-400 rounded-md" : ""}
+                >
+                  <NativeBirthdayPicker
+                    value={formData.scanDate ? String(formData.scanDate) : ""}
+                    onChange={(dateString) =>
+                      handleChange("scanDate", dateString)
+                    }
+                    placeholder="Select scan date"
+                  />
+                </div>
+              ) : key === "scanTime" ? (
+                <input
+                  type="time"
+                  value={formData.scanTime ? String(formData.scanTime) : ""}
+                  onChange={(e) => handleChange("scanTime", e.target.value)}
+                  className={`signUpFormField text-sm bg-transparent outline-none ${
+                    hasError ? "border-red-400" : ""
+                  }`}
+                />
+              ) : (
+                <input
+                  type="number"
+                  value={
+                    formData[key] === null || formData[key] === undefined
+                      ? ""
+                      : String(formData[key])
+                  }
+                  onChange={(e) => handleChange(key, e.target.value)}
+                  placeholder={OPTIONAL_FIELDS.includes(key) ? "—" : ""}
+                  className={`signUpFormField text-sm w-full bg-transparent outline-none ${
+                    hasError ? "border-red-400" : ""
+                  }`}
+                />
+              )}
+
+              {hasError && (
+                <p className="text-xs text-red-500 mt-0.5">
+                  {fieldErrors[key]}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {error && <p className="text-sm text-red-500 text-center">{error}</p>}
