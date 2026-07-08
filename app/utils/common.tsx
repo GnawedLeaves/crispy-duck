@@ -1,4 +1,7 @@
 import { ITautaScanData } from "../types/commonTypes";
+import maleDefaultAvatar from "../assets/default_profile_pic_male.png";
+import femaleDefaultAvatar from "../assets/default_profile_pic_female.png";
+import nbDefaultAvatar from "../assets/default_profile_pic_NA.png";
 
 export const withDelay = <T extends any[]>(
   callback: (...args: T) => void,
@@ -94,3 +97,10 @@ export function parseTautaScan(rawText: string) {
 
   return data as ITautaScanData;
 }
+
+export const handleEmptyProfilePic = (sex?: string, avatar_url?: string) => {
+  if (avatar_url) return avatar_url;
+  if (sex === "M") return maleDefaultAvatar;
+  if (sex === "F") return femaleDefaultAvatar;
+  else return nbDefaultAvatar;
+};

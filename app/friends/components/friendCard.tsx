@@ -2,15 +2,12 @@
 
 import { FriendModel } from "@/app/types/commonTypes";
 import Image from "next/image";
-import maleDefaultAvatar from "../../assets/default_profile_pic_male.png";
-import femaleDefaultAvatar from "../../assets/default_profile_pic_female.png";
-
-import nbDefaultAvatar from "../../assets/default_profile_pic_NA.png";
 
 import { token } from "@/app/theme";
 import { Check, Clock, Pencil, Plus, UserRound, X } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useMemo } from "react";
+import { handleEmptyProfilePic } from "@/app/utils/common";
 
 interface FriendCardProps {
   friendModel: FriendModel;
@@ -27,12 +24,7 @@ const FriendCard = ({
   onRejectFriendClick,
 }: FriendCardProps) => {
   const { user, refreshUser, isLoading } = useAuth();
-  const displayAvatarUrl = useMemo(() => {
-    if (friendModel.avatar_url) return friendModel.avatar_url;
-    if (friendModel.sex === "M") return maleDefaultAvatar;
-    if (friendModel.sex === "F") return femaleDefaultAvatar;
-    else return nbDefaultAvatar;
-  }, [friendModel]);
+
   const renderSideButton = () => {
     if (friendModel.friendshipModel.friendshipStatus === "accepted") {
       return (
@@ -102,7 +94,7 @@ const FriendCard = ({
       <div className="flex gap-2 h-full ">
         <div className="flexCenter shrink-0">
           <Image
-            src={displayAvatarUrl}
+            src={handleEmptyProfilePic(friendModel.sex, friendModel.avatar_url)}
             alt="avatar_image"
             className="object-cover rounded-full aspect-square border-2 border-black"
             width={60}

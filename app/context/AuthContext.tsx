@@ -1,12 +1,9 @@
 "use client";
 
-import { User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
 import { getUserContext } from "@/app/utils/login/authUtils";
-import { ExtendedUser, UserContext } from "../types/authTypes";
-import femaleDefaultAvatar from "../assets/default_profile_pic_female.png";
-import maleDefaultAvatar from "../assets/default_profile_pic_male.png";
-import naDefaultAvatar from "../assets/default_profile_pic_NA.png";
+import { UserContext } from "../types/authTypes";
+import { handleEmptyProfilePic } from "../utils/common";
 interface AuthContextType {
   user: UserContext | undefined;
   isLoggedIn: boolean;
@@ -26,21 +23,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user || !user.profile) {
       return user;
     }
-    let defaultProfilePic;
-    if (user?.profile?.avatar_url) {
-      return user;
-    } else if (user?.profile?.sex === "M") {
-      defaultProfilePic = maleDefaultAvatar.src;
-    } else if (user?.profile?.sex === "F") {
-      defaultProfilePic = femaleDefaultAvatar.src;
-    } else {
-      defaultProfilePic = naDefaultAvatar.src;
-    }
+
+    const defaultProfilePic = handleEmptyProfilePic(
+      user.profile.sex,
+      user.profile.avatar_url,
+    );
+
     const newUserWithProfilePic: UserContext = {
       ...user,
       profile: {
         ...user?.profile,
-        avatar_url: defaultProfilePic,
+        avatar_url: defaultProfilePic.toString(),
       },
     };
     return newUserWithProfilePic;
