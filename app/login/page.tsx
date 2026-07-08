@@ -15,7 +15,9 @@ import PageBackground from "../components/pageBackground/pageBackground";
 const LoginPage = () => {
   const [pageState, setPageState] = useState<PageState>("landing");
   const currentBgColor =
-    pageState === "landing" ? token.light.primaryColor : token.light.background;
+    pageState === "landing"
+      ? token.light.orangeYellowColor
+      : token.light.background;
   return (
     <PageBackground color={currentBgColor}>
       <ViewTransition
