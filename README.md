@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
 
-First, run the development server:
+---
 
+# 📄 Crispy Duck (wow gemini made this markdown so nice)
+
+A modern Next.js web application designed to digitize, store, and share physical body composition metrics. Inspired by the need to replace easily lost physical paper printouts from NTUC body scan machines, this app transforms paper data into actionable, shareable digital insights.
+
+## ✨ Key Features
+
+* **📷 Intelligent Scanning:** Uses advanced AI to extract data points directly from photos of physical body scan printouts.
+* **📊 Interactive Dashboards:** Visualizes your fitness journey and body composition trends over time with beautiful, responsive charts.
+* **🔒 Secure Cloud Storage:** Safely stores your historical scan data and profiles.
+* **🤝 Easy Sharing:** Seamlessly share your progress and body scan metrics with friends or personal trainers.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology Used |
+| --- | --- |
+| **Framework** | **Next.js** (App Router) |
+| **Database & Auth** | **Supabase** |
+| **AI / Document Processing** | **Google Cloud Document AI** |
+| **Data Visualization** | **Tremor Charts** |
+| **Styling & UI Components** | **Tailwind CSS** + **DaisyUI** |
+
+---
+
+## 🚀 Motivation
+
+NTUC body scan machines provide incredibly useful health and fitness data, but they rely heavily on physical paper slips that are easy to lose and impossible to track over the long term. **Crispy Duck Vault** bridges this gap by providing a digital-first home for your fitness metrics, allowing you to track trends, ditch the paper, and keep your community motivated.
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+* Node.js (v18+ recommended)
+* A Supabase account
+* Google Cloud Console access (with Document AI API enabled)
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/Crispy Duck-vault.git
+cd Crispy Duck-vault
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Install dependencies:
+```bash
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+3. Set up your environment variables (`.env.local`):
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+GOOGLE_DOCUMENT_AI_CREDENTIALS=your_google_creds
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+4. Run the development server:
+```bash
+npm run dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+---
+
+*Feel free to drop a ⭐ if you find this project useful!*
