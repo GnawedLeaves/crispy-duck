@@ -94,10 +94,21 @@ const EditFormView = ({
   onBack,
   imagePreview,
 }: EditFormViewProps) => {
+  const rawDate = initialData?.scanDate;
+  let formattedDate = "";
+
+  if (rawDate) {
+    const parsed = dayjs(rawDate);
+    if (parsed.isValid()) {
+      formattedDate = parsed.format("YYYY-MM-DD");
+    }
+  }
+
   const normalizedInitialData = {
     ...initialData,
-    scanDate: initialData.scanDate
-      ? dayjs(initialData.scanDate).format("YYYY-MM-DD")
+    scanDate: formattedDate,
+    scanTime: initialData.scanTime
+      ? dayjs(initialData.scanTime).format("HH:mm")
       : "",
   };
 
@@ -177,17 +188,20 @@ const EditFormView = ({
 
             {key === "scanDate" ? (
               <NativeBirthdayPicker
-                value={
-                  formData.scanDate === null || formData.scanDate === undefined
-                    ? ""
-                    : String(formData.scanDate)
-                }
+                value={formData.scanDate ? String(formData.scanDate) : ""}
                 onChange={(dateString) => handleChange("scanDate", dateString)}
                 placeholder="Select scan date"
               />
+            ) : key === "scanTime" ? (
+              <input
+                type="time"
+                value={formData.scanTime ? String(formData.scanTime) : ""}
+                onChange={(e) => handleChange("scanTime", e.target.value)}
+                className="signUpFormField text-sm w-full bg-transparent outline-none"
+              />
             ) : (
               <input
-                type={key === "scanTime" ? "text" : "number"}
+                type="number"
                 value={
                   formData[key] === null || formData[key] === undefined
                     ? ""
