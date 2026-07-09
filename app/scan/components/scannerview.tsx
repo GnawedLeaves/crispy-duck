@@ -330,7 +330,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
           <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-3">
               <span className="loading loading-spinner loading-md" />
-              <p className="font-semibold">Scanning your image...</p>
+              {/* <p className="font-semibold">Scanning your image...</p> */}
             </div>
             {progressMessage && (
               <p className="text-sm opacity-60">{progressMessage}</p>

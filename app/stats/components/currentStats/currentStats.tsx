@@ -5,7 +5,7 @@ import ProgressBarStatItem from "./progressBarStatItem";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
 import { useRouter } from "next/navigation";
 import { withDelay } from "@/app/utils/common";
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { ScanDataKey, TremorLineGraphColor } from "@/app/types/commonTypes";
 import ColorSelectionComponent, {
   tremorHexColors,
@@ -18,6 +18,7 @@ import { token } from "@/app/theme";
 interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
   isViewingFriend?: boolean;
+  friendColor?: TremorLineGraphColor;
 }
 
 export function getAxisRange(
@@ -38,6 +39,7 @@ export function getAxisRange(
 
 const CurrentStatsComponent = ({
   trendData,
+  friendColor,
   isViewingFriend = false,
 }: CurrentStatsComponentProps) => {
   const { user } = useAuth();
@@ -105,6 +107,16 @@ const CurrentStatsComponent = ({
     //   formatter: (n) => `${n}`,
     // },
   ];
+
+  const graphColor = useMemo(() => {
+    if (isViewingFriend) {
+      if (friendColor) {
+        return friendColor;
+      }
+      return "amber";
+    }
+    return userGraphColor;
+  }, [userGraphColor, friendColor]);
 
   const handleUserColorSave = async () => {
     try {
@@ -214,7 +226,7 @@ const CurrentStatsComponent = ({
                 <LineChart
                   className="h-48 "
                   data={chartFriendlyData}
-                  colors={[userGraphColor]}
+                  colors={[graphColor]}
                   index="axisDate"
                   categories={[label]}
                   valueFormatter={formatter}

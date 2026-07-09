@@ -1,6 +1,7 @@
 "use client";
 
 import useFriendController from "@/app/friends/friendController";
+import { tremorHexColors } from "@/app/stats/components/currentStats/colorSelectionComponent";
 import CurrentStatsComponent from "@/app/stats/components/currentStats/currentStats";
 import { token } from "@/app/theme";
 import { handleEmptyProfilePic, withDelay } from "@/app/utils/common";
@@ -8,7 +9,7 @@ import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
 import dayjs from "dayjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface FriendContentProps {
   friendId: string;
@@ -32,12 +33,21 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
     fetchProfile();
   }, [friendId]);
 
-  if (loading) return <div>Loading profile...</div>;
-  if (!profile) return <div>Profile not found.</div>;
-
   const handleCompareClick = withDelay(() => {
     router.push(`/profile/compare/${friendId}`);
   });
+
+  const graphColourHex = useMemo(() => {
+    if (profile?.graphColor) {
+      return (
+        tremorHexColors.find((color) => color.name === profile?.graphColor)
+          ?.hexCode || "#f59e0b"
+      );
+    } else return "#f59e0b";
+  }, [profile]);
+
+  if (loading) return <span className="loading loading-spinner loading-md" />;
+  if (!profile) return <div>Profile not found.</div>;
   return (
     <div>
       <div className="flex gap-6">
@@ -46,7 +56,8 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
           alt="profile_picture"
           width={100}
           height={100}
-          className="object-cover rounded-full aspect-square border-2 border-black"
+          className="object-cover rounded-full aspect-square border-4"
+          style={{ borderColor: graphColourHex }}
         />
         <div className="flex flex-col justify-center gap-1">
           <div className="text-3xl font-bold">{profile.display_name}</div>
@@ -84,6 +95,7 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
         <CurrentStatsComponent
           trendData={friendTrendData}
           isViewingFriend={true}
+          friendColor={profile.graphColor}
         />
       </div>
     </div>
