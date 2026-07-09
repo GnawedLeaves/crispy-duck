@@ -395,7 +395,7 @@ const EditFormView = ({
           onClick={onBackClick}
           disabled={loading}
         >
-          ← Back
+          Cancel
         </button>
         <button
           className="standardButton flex-1"

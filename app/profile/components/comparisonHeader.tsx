@@ -52,9 +52,10 @@ const ComparisonHeader = ({ friendProfile }: ComparisonHeaderProps) => {
 
   if (loading || !user)
     return (
-      <div className="mb-8 flex items-center justify-center">
-        <span className="loading loading-spinner loading-md" />
-      </div>
+      <></>
+      // <div className="mb-8 flex items-center justify-center">
+      //   <span className="loading loading-spinner loading-md" />
+      // </div>
     );
   return (
     <div className="mb-8">

@@ -1,16 +1,8 @@
 "use client";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
 import { useAuth } from "@/app/context/AuthContext";
-import { tremorHexColors } from "@/app/stats/components/currentStats/colorSelectionComponent";
-import {
-  ScanDataKey,
-  ComparisonScanDataKey,
-  ComparisonDataPoint,
-  TremorColorItem,
-} from "@/app/types/commonTypes";
-import { getRandomTremorColor } from "@/app/utils/common";
-import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
-import { useEffect, useMemo } from "react";
+import { ScanDataKey, ComparisonDataPoint } from "@/app/types/commonTypes";
+import { useMemo } from "react";
 
 interface ComparisonContentProps {
   weightComparisonData: ComparisonDataPoint[];
@@ -35,6 +27,8 @@ const ComparisonContent = ({
   friendProfile,
 }: ComparisonContentProps) => {
   const { user } = useAuth();
+
+  const isLoading = !user || !friendProfile;
 
   const charts: {
     categories: string[];
@@ -65,42 +59,49 @@ const ComparisonContent = ({
       data: muscleMassComparison,
     },
   ];
+
   const userGraphColors = useMemo(() => {
+    if (!user || !friendProfile) return ["gray", "amber"];
+
     const userColor = user?.profile?.graphColor;
     const friendColor = friendProfile?.graphColor;
 
     if (userColor !== friendColor) {
       return [userColor, friendColor];
     }
-    // case: user and friend have same colour and both are amber
     if (userColor === "amber" && userColor === friendColor) {
       return [userColor, "cyan"];
     }
-
-    // case: user and friend have same colour and its not amber, then set friend to amber
     return [userColor, "amber"];
   }, [friendProfile, user]);
 
-  const randomFriendColorTest = getRandomTremorColor();
+  if (isLoading) {
+    return (
+      <div className="w-full h-[40vh] flex flex-col gap-4 justify-center items-center">
+        <span className="loading loading-spinner loading-md" />
+        <div className="text-sm text-neutral-400">
+          Loading comparison data...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="flex flex-col gap-6">
-        {charts.map((chart) => {
-          return (
-            <div key={chart.key} className="cardWithShadow">
-              <div className="text-2xl font-semibold mb-1">{chart.label}</div>
-              <LineChart
-                className="h-48 "
-                colors={userGraphColors}
-                data={chart.data}
-                index="axisDate"
-                categories={chart.categories}
-                valueFormatter={chart.formatter}
-              />
-            </div>
-          );
-        })}
+        {charts.map((chart) => (
+          <div key={chart.key} className="cardWithShadow">
+            <div className="text-2xl font-semibold mb-1">{chart.label}</div>
+            <LineChart
+              className="h-48"
+              colors={userGraphColors}
+              data={chart.data}
+              index="axisDate"
+              categories={chart.categories}
+              valueFormatter={chart.formatter}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

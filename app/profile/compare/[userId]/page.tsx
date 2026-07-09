@@ -52,7 +52,6 @@ const CompareWithFriendPage = async ({
   );
 
   const friendProfile = await getFriendProfile(friendId);
-  const randomFriendColor = getRandomTremorColor();
 
   return (
     <div className="contentLayout">

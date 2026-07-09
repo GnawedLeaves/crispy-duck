@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
 import Link from "next/link";
 import { token } from "@/app/theme";
+import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
@@ -115,7 +116,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [rawResult, setRawResult] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [scanData, setScanData] = useState<ITautaScanData | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [progressSteps, setProgressSteps] = useState<ScanProgressStep[]>(
@@ -330,11 +331,20 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
           <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-3">
               <span className="loading loading-spinner loading-md" />
-              {/* <p className="font-semibold">Scanning your image...</p> */}
             </div>
-            {progressMessage && (
+            {/* {progressMessage && (
               <p className="text-sm opacity-60">{progressMessage}</p>
-            )}
+            )} */}
+            <AnimatedLoadingText
+              messages={[
+                "Squeezing your fats...",
+                "Gripping your muscles...",
+                "Checking your water levels...",
+                "Measuring your head width...",
+                "Feeding ducks...",
+              ]}
+              interval={5000}
+            />
             <ScanProgressChecklist steps={progressSteps} />
           </div>
         ) : inputFile ? (

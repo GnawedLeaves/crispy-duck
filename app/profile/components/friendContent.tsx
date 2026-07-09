@@ -46,7 +46,13 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
     } else return "#f59e0b";
   }, [profile]);
 
-  if (loading) return <span className="loading loading-spinner loading-md" />;
+  if (loading)
+    return (
+      <div className="w-full h-[80vh] flex flex-col gap-8 justify-center items-center">
+        <span className="loading loading-spinner loading-md" />
+        <div className="text-sm text-muted-foreground">Loading profile...</div>
+      </div>
+    );
   if (!profile) return <div>Profile not found.</div>;
   return (
     <div>
