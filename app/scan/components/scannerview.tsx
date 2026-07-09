@@ -116,7 +116,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [rawResult, setRawResult] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scanData, setScanData] = useState<ITautaScanData | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [progressSteps, setProgressSteps] = useState<ScanProgressStep[]>(
