@@ -65,12 +65,13 @@ const FriendContent = ({ friendId, friendTrendData }: FriendContentProps) => {
           className="object-cover rounded-full aspect-square border-4"
           style={{ borderColor: graphColourHex }}
         />
-        <div className="flex flex-col justify-center gap-1">
+        <div className="flex flex-col justify-center gap-1 ">
           <div className="text-3xl font-bold">{profile.display_name}</div>
-          <div className="text-sm">@{profile.username}</div>
+          <div className="text-md">@{profile.username}</div>
+          <div className="text-sm text-muted-foreground">{profile.bio}</div>
         </div>
       </div>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mt-2">
         <div className="flex flex-col gap-1 my-4">
           <div className="text-md">
             Date Joined: {dayjs(profile.created_at).format("DD MMM YYYY")}
