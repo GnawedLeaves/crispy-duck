@@ -233,6 +233,32 @@ export const updateUserProfile = async ({
   return { data, error: null };
 };
 
+//ideally we shd generate a generic patch function but i want to practise
+export const updateUserProfileGraphColor = async ({
+  graphColor,
+  userId,
+}: {
+  graphColor: string;
+  userId?: string;
+}) => {
+  if (!userId || !graphColor) return;
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ graphColor })
+    .eq("id", userId);
+
+  if (error) {
+    return {
+      data: null,
+      error: { message: error.message, code: error.code },
+    };
+  }
+
+  return { data, error: null };
+};
+
 export const checkUsernameAvailability = async (
   username: string,
   currentUserId?: string,

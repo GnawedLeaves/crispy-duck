@@ -64,6 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshUser = async () => {
     try {
       const user = await getUserContext();
+
       const userWithAvatar = checkForProfilePicture(user);
       setUser(userWithAvatar);
       setIsLoggedIn(isLoggedIn);

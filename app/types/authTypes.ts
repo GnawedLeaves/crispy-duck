@@ -1,4 +1,5 @@
 import { AuthError, Session, User } from "@supabase/supabase-js";
+import { TremorLineGraphColor } from "./commonTypes";
 
 export interface UserSignUpNewEmailProps {
   email: string;
@@ -25,6 +26,7 @@ export interface UserProfile {
   updated_at: string;
   birthday: string;
   sex?: "M" | "F" | "NA";
+  graphColor?: TremorLineGraphColor;
 }
 
 //main User type

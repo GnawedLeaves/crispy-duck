@@ -105,3 +105,14 @@ export interface ComparisonDataPoint {
   axisDate: string;
 }
 [];
+
+export type TremorLineGraphColor =
+  | "amber"
+  | "blue"
+  | "emerald"
+  | "violet"
+  | "gray"
+  | "cyan"
+  | "pink"
+  | "lime"
+  | "fuchsia";

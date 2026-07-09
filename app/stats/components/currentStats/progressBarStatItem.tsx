@@ -4,6 +4,7 @@ interface StatItemProps {
   title: string;
   progressString?: string;
   progressPercentage: number;
+  color?: string;
 }
 
 const ProgressBarStatItem = ({

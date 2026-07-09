@@ -5,8 +5,15 @@ import ProgressBarStatItem from "./progressBarStatItem";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
 import { useRouter } from "next/navigation";
 import { withDelay } from "@/app/utils/common";
-import { startTransition } from "react";
-import { ScanDataKey } from "@/app/types/commonTypes";
+import { startTransition, useEffect, useRef, useState } from "react";
+import { ScanDataKey, TremorLineGraphColor } from "@/app/types/commonTypes";
+import ColorSelectionComponent, {
+  tremorHexColors,
+} from "./colorSelectionComponent";
+import { updateUserProfileGraphColor } from "@/app/utils/login/authUtils";
+import { useAuth } from "@/app/context/AuthContext";
+import { useToast } from "@/app/components/toast/toastNotification";
+import { token } from "@/app/theme";
 
 interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
@@ -33,6 +40,22 @@ const CurrentStatsComponent = ({
   trendData,
   isViewingFriend = false,
 }: CurrentStatsComponentProps) => {
+  const { user } = useAuth();
+  const [userGraphColor, setUserGraphColor] = useState<TremorLineGraphColor>(
+    user?.profile?.graphColor || "amber",
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const colorInitialised = useRef(false);
+  const { triggerToast } = useToast();
+  useEffect(() => {
+    if (user && !colorInitialised.current) {
+      setUserGraphColor(user?.profile?.graphColor || "amber");
+      colorInitialised.current = true;
+    }
+  }, [user]);
+
+  const [isColorChoosingOpen, setIsColorChoosingOpen] =
+    useState<boolean>(false);
   const latestScan = trendData?.[trendData.length - 1];
   const router = useRouter();
   const handlePushToScan = withDelay(() => {
@@ -83,6 +106,37 @@ const CurrentStatsComponent = ({
     // },
   ];
 
+  const handleUserColorSave = async () => {
+    try {
+      setIsLoading(true);
+      await updateUserProfileGraphColor({
+        graphColor: userGraphColor,
+        userId: user?.id,
+      });
+      triggerToast(
+        `Colour changed to ${userGraphColor}!`,
+        tremorHexColors.find((color) => color.name === userGraphColor)
+          ?.hexCode || token.light.primaryColor,
+        4000,
+      );
+      setIsLoading(false);
+      setIsColorChoosingOpen(false);
+    } catch (e) {
+      console.error("Failed to update graph color");
+      triggerToast("Failed to change color!", token.light.redColor, 4000);
+      setIsLoading(false);
+    }
+  };
+
+  const handleUserColorCancel = withDelay(() => {
+    setIsColorChoosingOpen(false);
+    setUserGraphColor(user?.profile?.graphColor || "amber");
+  });
+
+  const handleOpenColorChanger = withDelay(() => {
+    setIsColorChoosingOpen(true);
+  });
+
   return (
     <div>
       <div className="text-3xl text-center mb-4 font-bold">
@@ -103,7 +157,32 @@ const CurrentStatsComponent = ({
           )}
         </div>
       )}
-      {latestScan?.date && <div>Latest scan: {latestScan?.date}</div>}
+      {isColorChoosingOpen && (
+        <ColorSelectionComponent
+          isLoading={isLoading}
+          selectedColor={userGraphColor}
+          onColorSelect={(newColor: TremorLineGraphColor) => {
+            setUserGraphColor(newColor);
+          }}
+          onCancelClick={function (): void {
+            handleUserColorCancel();
+          }}
+          onSaveClick={() => {
+            handleUserColorSave();
+          }}
+        />
+      )}
+
+      {latestScan?.date && (
+        <div className="flex justify-between items-end">
+          <div>Latest scan: {latestScan?.date}</div>
+          {!isColorChoosingOpen && (
+            <button className="standardButton" onClick={handleOpenColorChanger}>
+              Change Colour
+            </button>
+          )}
+        </div>
+      )}
       {trendData?.length > 0 && (
         <div className="flex flex-col gap-4 mt-2">
           <ProgressBarStatItem
@@ -135,7 +214,7 @@ const CurrentStatsComponent = ({
                 <LineChart
                   className="h-48 "
                   data={chartFriendlyData}
-                  colors={["amber"]}
+                  colors={[userGraphColor]}
                   index="axisDate"
                   categories={[label]}
                   valueFormatter={formatter}
