@@ -105,11 +105,12 @@ export async function getFriendProfile(friendId: string) {
 
   const { data, error } = await supabase
     .from("profiles_public")
-    .select("id, username, display_name, avatar_url, sex, birthday, created_at")
+    .select(
+      "id, username, display_name, avatar_url, sex, birthday, created_at,graphColor ",
+    )
     .eq("id", friendId)
     .maybeSingle();
 
   if (error) throw error;
-  console.log({ data });
   return data;
 }

@@ -1,7 +1,8 @@
-import { ITautaScanData } from "../types/commonTypes";
+import { ITautaScanData, TremorColorItem } from "../types/commonTypes";
 import maleDefaultAvatar from "../assets/default_profile_pic_male.png";
 import femaleDefaultAvatar from "../assets/default_profile_pic_female.png";
 import nbDefaultAvatar from "../assets/default_profile_pic_NA.png";
+import { tremorHexColors } from "../stats/components/currentStats/colorSelectionComponent";
 
 export interface ComparisonDataPoint {
   axisDate: string;
@@ -173,3 +174,8 @@ export function mergeAndFillTrendData(
   // you might want to backward-fill it or filter it out so it doesn't show null.
   return comparisonData;
 }
+
+export const getRandomTremorColor = (): TremorColorItem => {
+  const randomIndex = Math.floor(Math.random() * tremorHexColors.length);
+  return tremorHexColors[randomIndex];
+};

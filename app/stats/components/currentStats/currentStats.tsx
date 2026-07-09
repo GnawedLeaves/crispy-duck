@@ -176,7 +176,7 @@ const CurrentStatsComponent = ({
       {latestScan?.date && (
         <div className="flex justify-between items-end">
           <div>Latest scan: {latestScan?.date}</div>
-          {!isColorChoosingOpen && (
+          {!isColorChoosingOpen && !isViewingFriend && (
             <button className="standardButton" onClick={handleOpenColorChanger}>
               Change Colour
             </button>

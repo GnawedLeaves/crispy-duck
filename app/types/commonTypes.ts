@@ -116,3 +116,7 @@ export type TremorLineGraphColor =
   | "pink"
   | "lime"
   | "fuchsia";
+export interface TremorColorItem {
+  name: TremorLineGraphColor;
+  hexCode: string;
+}

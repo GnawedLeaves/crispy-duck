@@ -1,30 +1,54 @@
 "use client";
 import { useAuth } from "@/app/context/AuthContext";
 import useFriendController from "@/app/friends/friendController";
-import { handleEmptyProfilePic } from "@/app/utils/common";
+import {
+  getRandomTremorColor,
+  handleEmptyProfilePic,
+} from "@/app/utils/common";
 import { profile } from "console";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { TremorColorItem, TremorLineGraphColor } from "@/app/types/commonTypes";
+import { tremorHexColors } from "@/app/stats/components/currentStats/colorSelectionComponent";
 
 interface ComparisonHeaderProps {
-  friendId: string;
+  friendProfile: {
+    id: any;
+    username: any;
+    display_name: any;
+    avatar_url: any;
+    sex: any;
+    birthday: any;
+    created_at: any;
+    graphColor: any;
+  } | null;
 }
 
-const ComparisonHeader = ({ friendId }: ComparisonHeaderProps) => {
+const ComparisonHeader = ({ friendProfile }: ComparisonHeaderProps) => {
   const { user } = useAuth();
-  const [friendProfile, setFriendProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const { getFriendProfile } = useFriendController({});
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      const friendProfile = await getFriendProfile(friendId);
-      setFriendProfile(friendProfile);
-      setLoading(false);
-    };
+  const [loading, setLoading] = useState(false);
 
-    fetchProfile();
-  }, [friendId]);
+  const userGraphColors = useMemo(() => {
+    const userColor = user?.profile?.graphColor;
+    const friendColor = friendProfile?.graphColor;
+    const userColorHex =
+      tremorHexColors.find((color) => color.name === userColor)?.hexCode ||
+      "#f59e0b";
+    const friendColorHex =
+      tremorHexColors.find((color) => color.name === friendColor)?.hexCode ||
+      "#f59e0b";
+
+    if (userColor !== friendColor) {
+      return [userColorHex, friendColorHex];
+    }
+    // case: user and friend have same colour and both are amber
+    if (userColor === "amber" && userColor === friendColor) {
+      return [userColorHex, "#06b6d4"];
+    }
+
+    // case: user and friend have same colour and its not amber, then set friend to amber
+    return [userColorHex, "#f59e0b"];
+  }, [friendProfile, user]);
 
   if (loading || !user)
     return (
@@ -45,7 +69,11 @@ const ComparisonHeader = ({ friendId }: ComparisonHeaderProps) => {
             alt="profile_picture"
             width={150}
             height={150}
-            className="object-cover rounded-full aspect-square border-3 border-amber-500"
+            className="object-cover rounded-full aspect-square border-4"
+            style={{
+              // borderColor: `var(--${userGraphColors[0]}-500, currentColor)`,
+              borderColor: userGraphColors[0],
+            }}
           />
           <div className="text-lg">{user.profile?.display_name}</div>
         </div>
@@ -54,15 +82,19 @@ const ComparisonHeader = ({ friendId }: ComparisonHeaderProps) => {
         <div className="flex flex-col gap-2 items-center">
           <Image
             src={handleEmptyProfilePic(
-              friendProfile.sex,
-              friendProfile.avatar_url,
+              friendProfile?.sex,
+              friendProfile?.avatar_url,
             )}
             alt="profile_picture"
             width={150}
             height={150}
-            className="object-cover rounded-full aspect-square border-3 border-emerald-500"
+            className="object-cover rounded-full aspect-square border-4"
+            style={{
+              // borderColor: `var(--${userGraphColors[1]}-500, currentColor)`,
+              borderColor: userGraphColors[1],
+            }}
           />
-          <div className="text-lg">{friendProfile.display_name}</div>
+          <div className="text-lg">{friendProfile?.display_name}</div>
         </div>
       </div>
     </div>

@@ -3,10 +3,12 @@ import {
   getBodyScanDataFromFriend,
 } from "@/app/utils/supabase/getBodyScanDataAction";
 import ComparisonContent from "../../components/comparsionCharts";
-import { mergeAndFillTrendData } from "@/app/utils/common";
+import {
+  getRandomTremorColor,
+  mergeAndFillTrendData,
+} from "@/app/utils/common";
 import ComparisonHeader from "../../components/comparisonHeader";
-import { cookies } from "next/headers";
-import { createClient } from "@/app/utils/supabase/server";
+import { getFriendProfile } from "@/app/utils/supabase/friendAction";
 
 interface CompareWithFriendPageProps {
   params: Promise<{ userId: string }>;
@@ -49,10 +51,14 @@ const CompareWithFriendPage = async ({
     },
   );
 
+  const friendProfile = await getFriendProfile(friendId);
+  const randomFriendColor = getRandomTremorColor();
+
   return (
     <div className="contentLayout">
-      <ComparisonHeader friendId={friendId} />
+      <ComparisonHeader friendProfile={friendProfile} />
       <ComparisonContent
+        friendProfile={friendProfile}
         weightComparisonData={weightComparisonData}
         fatComparisonData={fatComparisonData}
         muscleMassComparison={muscleMassComparison}

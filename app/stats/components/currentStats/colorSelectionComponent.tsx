@@ -1,7 +1,7 @@
 "use client";
 
 import { token } from "@/app/theme";
-import { TremorLineGraphColor } from "@/app/types/commonTypes";
+import { TremorColorItem, TremorLineGraphColor } from "@/app/types/commonTypes";
 import { useState } from "react";
 
 interface ColorSelectionComponentProps {
@@ -10,10 +10,6 @@ interface ColorSelectionComponentProps {
   onCancelClick: () => void;
   onSaveClick: () => void;
   isLoading: boolean;
-}
-interface TremorColorItem {
-  name: TremorLineGraphColor;
-  hexCode: string;
 }
 
 const ColorSelectionComponent = ({
