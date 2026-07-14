@@ -1,15 +1,13 @@
 "use client";
 import { useAuth } from "@/app/context/AuthContext";
-import { token } from "@/app/theme";
-import { LogOut, Pencil } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import EditProfileModal from "./editProfileModal";
 import { handleEmptyProfilePic, withDelay } from "@/app/utils/common";
 import { signOutAction } from "@/app/utils/login/authUtils";
+import { LogOut, Pencil } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import CustomModal from "../modal/customModal";
+import EditProfileModal from "./editProfileModal";
 
 const ProfileBanner = () => {
   const { user, refreshUser, isLoading } = useAuth();
@@ -101,8 +99,7 @@ const ProfileBanner = () => {
       />
 
       <div className="flex gap-1 items-center">
-        <Link
-          href="/profile"
+        <div
           className="p-2 rounded-full inline-block transition-colors hover:opacity-80"
         >
           <Image
@@ -115,7 +112,7 @@ const ProfileBanner = () => {
             alt="avatar_image"
             className="rounded-full object-cover w-18 h-18 border-2 border-black"
           />
-        </Link>
+        </div>
         <div>
           <div className="text-2xl font-bold">
             {user?.profile?.display_name ?? "Loading..."}

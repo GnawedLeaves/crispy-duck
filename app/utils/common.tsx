@@ -1,10 +1,7 @@
-import { ITautaScanData, TremorColorItem } from "../types/commonTypes";
-import maleDefaultAvatar from "../assets/default_profile_pic_male.png";
-import femaleDefaultAvatar from "../assets/default_profile_pic_female.png";
-import nbDefaultAvatar from "../assets/default_profile_pic_NA.png";
 import duck1 from "../assets/duck_1.png";
-import duck2 from "../assets/duck_1.png";
-import duck3 from "../assets/duck_1.png";
+import duck2 from "../assets/duck_2.png";
+import duck3 from "../assets/duck_3.png";
+import { ITautaScanData, TremorColorItem } from "../types/commonTypes";
 
 import { tremorHexColors } from "../stats/components/currentStats/colorSelectionComponent";
 
@@ -122,7 +119,7 @@ export const handleEmptyProfilePic = (sex?: string, avatar_url?: any) => {
   return duck3;
 };
 
-type DataPoint = { axisDate: string; [key: string]: any };
+type DataPoint = { axisDate: string;[key: string]: any };
 
 interface MergeConfig {
   userLabel: string; // e.g., "My Weight"
