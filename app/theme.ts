@@ -22,7 +22,7 @@ export const token: ThemeToken = {
     background: "#FFF2E9",
     textColor: "#070707",
     borderColor: "#070707",
-    primaryColor: "#FFD913",
+    primaryColor: "#FEB801",
     lighterBackground: "#363636",
     redColor: "#F04B4B",
     blueColor: "#70CDDE",
