@@ -21,7 +21,7 @@ export interface BodyScanDataPoint {
 async function fetchBodyScanData(
   supabase: SupabaseClient,
   userId: string,
-  limit = 10,
+  limit = 15,
 ): Promise<BodyScanDataPoint[]> {
   const { data, error } = await supabase
     .from("tanita_scans")
@@ -29,23 +29,25 @@ async function fetchBodyScanData(
       "scan_date, weight, fat_percentage, muscle_mass, fat_mass,tbw_percent, metabolic_age,bmi,visceral_fat_rating",
     )
     .eq("user_id", userId)
-    .order("scan_date", { ascending: true })
+    .order("scan_date", { ascending: false })
     .limit(limit);
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((row) => ({
-    date: dayjs(row.scan_date).format("DD MMM YYYY"),
-    axisDate: dayjs(row.scan_date).format("DD MMM YY"),
-    totalWeight: parseFloat(row.weight),
-    fatpercentage: parseFloat(row.fat_percentage),
-    muscleMass: parseFloat(row.muscle_mass),
-    fatMass: parseFloat(row.fat_mass),
-    tbwPercentage: parseFloat(row.tbw_percent),
-    metabolicAge: parseFloat(row.metabolic_age),
-    bmi: parseFloat(row.bmi),
-    visceralFatRating: parseFloat(row.visceral_fat_rating),
-  })) as BodyScanDataPoint[];
+  return (data ?? [])
+    .map((row) => ({
+      date: dayjs(row.scan_date).format("DD MMM YYYY"),
+      axisDate: dayjs(row.scan_date).format("DD MMM YY"),
+      totalWeight: parseFloat(row.weight),
+      fatpercentage: parseFloat(row.fat_percentage),
+      muscleMass: parseFloat(row.muscle_mass),
+      fatMass: parseFloat(row.fat_mass),
+      tbwPercentage: parseFloat(row.tbw_percent),
+      metabolicAge: parseFloat(row.metabolic_age),
+      bmi: parseFloat(row.bmi),
+      visceralFatRating: parseFloat(row.visceral_fat_rating),
+    }))
+    .reverse() as BodyScanDataPoint[];
 }
 
 export async function getBodyScanData(): Promise<BodyScanDataPoint[]> {
