@@ -34,14 +34,27 @@ export async function uploadScanToStorage(
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    const fileExt = file.name.split(".").pop();
+    const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "";
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `uploads/${Date.now()}_${fileName}`;
+
+    let resolvedMimeType = file.type;
+    if (!resolvedMimeType) {
+      if (fileExt === "heic" || fileExt === "heif") {
+        resolvedMimeType = "image/heic";
+      } else if (fileExt === "jpg" || fileExt === "jpeg") {
+        resolvedMimeType = "image/jpeg";
+      } else if (fileExt === "png") {
+        resolvedMimeType = "image/png";
+      } else {
+        resolvedMimeType = "application/octet-stream";
+      }
+    }
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("scans")
       .upload(filePath, file, {
-        contentType: file.type,
+        contentType: resolvedMimeType,
         cacheControl: "3600",
         upsert: false,
       });
@@ -53,7 +66,7 @@ export async function uploadScanToStorage(
     return {
       success: true,
       filePath: storageData.path,
-      mimeType: file.type,
+      mimeType: resolvedMimeType,
     };
   } catch (err: any) {
     console.error(err);
