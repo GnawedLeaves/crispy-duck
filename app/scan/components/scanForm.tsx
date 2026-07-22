@@ -4,25 +4,69 @@ import { token } from "@/app/theme";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
 import { ProcessScanResponse } from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
-import { useMemo, useState, ViewTransition } from "react";
+import { useMemo, useState } from "react";
+import heic2any from "heic2any"; // 1. Import heic2any
 
 interface ScanFormProps {
   handleFileUpload: (file: File) => Promise<ProcessScanResponse | undefined>;
 }
+
+// 2. Helper to convert HEIC/HEIF to JPG directly in the browser
+async function processAndConvertFile(file: File): Promise<File> {
+  const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const isHeic =
+    fileExt === "heic" ||
+    fileExt === "heif" ||
+    file.type.includes("heic") ||
+    file.type.includes("heif");
+
+  if (!isHeic) {
+    return file; // Return as-is if it's already JPEG/PNG
+  }
+
+  try {
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.8,
+    });
+
+    const resultBlob = Array.isArray(convertedBlob)
+      ? convertedBlob[0]
+      : convertedBlob;
+
+    const jpegFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+
+    return new File([resultBlob], jpegFileName, {
+      type: "image/jpeg",
+    });
+  } catch (error) {
+    console.error("HEIC conversion failed, using original file:", error);
+    return file;
+  }
+}
+
 const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [inputFile, setInputFile] = useState<File | null>();
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  null;
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  // 3. Updated handleFileChange to convert HEIC/HEIF files on selection
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      const file = files[0];
-      setInputFile(file);
+      setLoading(true); // Optional: show spinner while converting on mobile
+      const rawFile = files[0];
 
-      const previewUrl = URL.createObjectURL(file);
+      // Convert HEIC to JPEG if needed
+      const readyFile = await processAndConvertFile(rawFile);
+
+      setInputFile(readyFile);
+
+      const previewUrl = URL.createObjectURL(readyFile);
       setImagePreview(previewUrl);
+      setLoading(false);
     }
   };
 
@@ -30,7 +74,7 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
     if (inputFile) {
       setLoading(true);
       const data = await handleFileUpload(inputFile);
-      const textFromData = data?.data.text;
+      const textFromData = data?.data?.text;
       if (textFromData) {
         setResult(textFromData);
       }
@@ -54,7 +98,7 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
     if (!processedResult) return <div>-</div>;
     return Object.entries(processedResult).map(([key, value]) => {
       return (
-        <div style={{ textAlign: "left" }}>
+        <div key={key} style={{ textAlign: "left" }}>
           {key}: {value} <br />
         </div>
       );
@@ -82,14 +126,14 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
           >
             Scan
           </button>
-          <button className="standardButton " onClick={handleReplaceImage}>
+          <button className="standardButton" onClick={handleReplaceImage}>
             Replace
           </button>
         </div>
       ) : (
         !loading && (
           <div>
-            <label className="standardButton  cursor-pointer inline-block">
+            <label className="standardButton cursor-pointer inline-block">
               Add file
               <input
                 type="file"
