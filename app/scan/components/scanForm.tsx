@@ -5,26 +5,33 @@ import { parseTautaScan, withDelay } from "@/app/utils/common";
 import { ProcessScanResponse } from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import heic2any from "heic2any"; // 1. Import heic2any
 
 interface ScanFormProps {
-  handleFileUpload: (file: File) => Promise<ProcessScanResponse | undefined>;
+  handleFileUpload: (
+    formData: FormData,
+  ) => Promise<ProcessScanResponse | undefined>;
 }
 
-// 2. Helper to convert HEIC/HEIF to JPG directly in the browser
-async function processAndConvertFile(file: File): Promise<File> {
+// 1. Safe Client-Side HEIC Converter with error logging return
+async function processAndConvertFile(
+  file: File,
+  onError: (msg: string) => void,
+): Promise<File> {
   const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "";
   const isHeic =
     fileExt === "heic" ||
     fileExt === "heif" ||
     file.type.includes("heic") ||
-    file.type.includes("heif");
+    file.type.includes("heif") ||
+    file.type === "";
 
   if (!isHeic) {
-    return file; // Return as-is if it's already JPEG/PNG
+    return file;
   }
 
   try {
+    const heic2any = (await import("heic2any")).default;
+
     const convertedBlob = await heic2any({
       blob: file,
       toType: "image/jpeg",
@@ -35,50 +42,91 @@ async function processAndConvertFile(file: File): Promise<File> {
       ? convertedBlob[0]
       : convertedBlob;
 
-    const jpegFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+    const safeName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
 
-    return new File([resultBlob], jpegFileName, {
+    return new File([resultBlob], safeName, {
       type: "image/jpeg",
+      lastModified: Date.now(),
     });
-  } catch (error) {
-    console.error("HEIC conversion failed, using original file:", error);
+  } catch (error: any) {
+    const errText = error?.message || String(error);
+    console.error("HEIC conversion failed:", error);
+    onError(`HEIC conversion failed (${errText}). Using raw file.`);
     return file;
   }
 }
 
 const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [inputFile, setInputFile] = useState<File | null>();
+  const [inputFile, setInputFile] = useState<File | null>(null);
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  // 3. Updated handleFileChange to convert HEIC/HEIF files on selection
+  // State for on-screen debug errors
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrorMessage(null); // Reset previous errors
     const files = e.target.files;
+
     if (files && files.length > 0) {
-      setLoading(true); // Optional: show spinner while converting on mobile
+      setLoading(true);
       const rawFile = files[0];
 
-      // Convert HEIC to JPEG if needed
-      const readyFile = await processAndConvertFile(rawFile);
+      try {
+        const readyFile = await processAndConvertFile(rawFile, (msg) =>
+          setErrorMessage(msg),
+        );
+        setInputFile(readyFile);
 
-      setInputFile(readyFile);
-
-      const previewUrl = URL.createObjectURL(readyFile);
-      setImagePreview(previewUrl);
-      setLoading(false);
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImagePreview(event.target?.result as string);
+          setLoading(false);
+        };
+        reader.onerror = () => {
+          setErrorMessage(
+            "FileReader failed to read the selected file on this device.",
+          );
+          setLoading(false);
+        };
+        reader.readAsDataURL(readyFile);
+      } catch (err: any) {
+        setErrorMessage(`File selection error: ${err?.message || String(err)}`);
+        setLoading(false);
+      }
     }
   };
 
   const handleConfirmUpload = withDelay(async () => {
     if (inputFile) {
       setLoading(true);
-      const data = await handleFileUpload(inputFile);
-      const textFromData = data?.data?.text;
-      if (textFromData) {
-        setResult(textFromData);
+      setErrorMessage(null);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", inputFile);
+
+        const data = await handleFileUpload(formData);
+
+        if (!data) {
+          setErrorMessage(
+            "Server returned no response or upload returned undefined.",
+          );
+        } else if (data?.data?.text) {
+          setResult(data.data.text);
+        } else {
+          setErrorMessage(
+            `Upload processed but no text was returned. Data: ${JSON.stringify(data)}`,
+          );
+        }
+      } catch (err: any) {
+        const errorDetail = err?.message || String(err);
+        console.error("Upload error:", err);
+        setErrorMessage(`Upload Failed: ${errorDetail}`);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
   });
 
@@ -86,6 +134,7 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
     setInputFile(null);
     setImagePreview(null);
     setResult("");
+    setErrorMessage(null);
   });
 
   const processedResult = useMemo(() => {
@@ -99,14 +148,28 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
     return Object.entries(processedResult).map(([key, value]) => {
       return (
         <div key={key} style={{ textAlign: "left" }}>
-          {key}: {value} <br />
+          {key}: {String(value)} <br />
         </div>
       );
     });
   };
 
   return (
-    <div className="flexCenter flex-col gap-4">
+    <div className="flexCenter flex-col gap-4 max-w-md mx-auto p-4">
+      {/* Visual Debug Error Banner */}
+      {errorMessage && (
+        <div className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm break-words">
+          <strong className="font-bold block">Debug Log:</strong>
+          <span>{errorMessage}</span>
+          <button
+            className="mt-2 block text-xs underline font-semibold"
+            onClick={() => setErrorMessage(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {imagePreview && (
         <Image
           alt="scan_preview_image"

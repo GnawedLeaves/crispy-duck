@@ -23,11 +23,17 @@ export interface StorageUploadResult {
   error?: string;
 }
 
+// 1. Accepts FormData to safely bridge Next.js Server Action boundary on iOS WebKit
 export async function uploadScanToStorage(
-  file: File,
+  formData: FormData,
 ): Promise<StorageUploadResult> {
-  if (!file) {
-    return { success: false, error: "No file was provided." };
+  const file = formData.get("file") as File | null;
+
+  if (!file || file.size === 0) {
+    return {
+      success: false,
+      error: "No file was provided or file buffer is empty.",
+    };
   }
 
   try {
@@ -51,9 +57,12 @@ export async function uploadScanToStorage(
       }
     }
 
+    // 2. Convert File to ArrayBuffer to bypass iOS streaming serialization bugs
+    const fileArrayBuffer = await file.arrayBuffer();
+
     const { data: storageData, error: storageError } = await supabase.storage
       .from("scans")
-      .upload(filePath, file, {
+      .upload(filePath, fileArrayBuffer, {
         contentType: resolvedMimeType,
         cacheControl: "3600",
         upsert: false,
@@ -112,14 +121,16 @@ export async function processScanFile(
   }
 }
 
-export async function handleFileUpload(file: File) {
-  const uploadResult = await uploadScanToStorage(file);
+// 3. Takes FormData directly from the client
+export async function handleFileUpload(formData: FormData) {
+  const file = formData.get("file") as File | null;
+  const uploadResult = await uploadScanToStorage(formData);
 
   if (!uploadResult.success || !uploadResult.filePath) return;
 
   return processScanFile(
     uploadResult.filePath,
-    uploadResult.mimeType ?? file.type,
+    uploadResult.mimeType ?? file?.type ?? "image/jpeg",
   );
 }
 
@@ -129,7 +140,6 @@ export const uploadScanData = async (
 ) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
-  // Convert "15/JAN/2056" to "2056-01-15" using your dayjs library or native JS
   const formattedDate = dayjs(scannedData.scanDate, "DD/MMM/YYYY").format(
     "YYYY-MM-DD",
   );
@@ -180,7 +190,7 @@ export const getUserTanitaScans = async () => {
     .from("tanita_scans")
     .select("*")
     .eq("user_id", user.id)
-    .order("scan_date", { ascending: false }); // Optional: nicely sorts latest scans first!
+    .order("scan_date", { ascending: false });
 
   if (error) {
     return {
