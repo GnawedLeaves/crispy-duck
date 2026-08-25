@@ -1,19 +1,19 @@
 "use client";
 
-import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
-import ProgressBarStatItem from "./progressBarStatItem";
 import { LineChart } from "@/app/components/charts/tremor/LineChart";
-import { useRouter } from "next/navigation";
-import { withDelay } from "@/app/utils/common";
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { useToast } from "@/app/components/toast/toastNotification";
+import { useAuth } from "@/app/context/AuthContext";
+import { token } from "@/app/theme";
 import { ScanDataKey, TremorLineGraphColor } from "@/app/types/commonTypes";
+import { withDelay } from "@/app/utils/common";
+import { updateUserProfileGraphColor } from "@/app/utils/login/authUtils";
+import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
+import { useRouter } from "next/navigation";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import ColorSelectionComponent, {
   tremorHexColors,
 } from "./colorSelectionComponent";
-import { updateUserProfileGraphColor } from "@/app/utils/login/authUtils";
-import { useAuth } from "@/app/context/AuthContext";
-import { useToast } from "@/app/components/toast/toastNotification";
-import { token } from "@/app/theme";
+import ProgressBarStatItem from "./progressBarStatItem";
 import StatsAiInsights from "./statsAiInsights";
 
 interface CurrentStatsComponentProps {
@@ -71,43 +71,43 @@ const CurrentStatsComponent = ({
     key: ScanDataKey;
     formatter: (n: number) => string;
   }[] = [
-    {
-      label: "Total Weight (kg)",
-      key: "totalWeight",
-      formatter: (n) => `${n} kg`,
-    },
-    {
-      label: "Fat Percentage (%)",
-      key: "fatpercentage",
-      formatter: (n) => `${n}%`,
-    },
-    {
-      label: "Muscle Mass (kg)",
-      key: "muscleMass",
-      formatter: (n) => `${n} kg`,
-    },
-    { label: "Fat Mass (kg)", key: "fatMass", formatter: (n) => `${n} kg` },
-    {
-      label: "Metabolic Age (years)",
-      key: "metabolicAge",
-      formatter: (n) => `${n}`,
-    },
-    {
-      label: "BMI",
-      key: "bmi",
-      formatter: (n) => `${n}`,
-    },
-    {
-      label: "Total Body Water (%)",
-      key: "tbwPercentage",
-      formatter: (n) => `${n} %`,
-    },
-    // {
-    //   label: "Visceral Fat Rating",
-    //   key: "visceralFatRating",
-    //   formatter: (n) => `${n}`,
-    // },
-  ];
+      {
+        label: "Total Weight (kg)",
+        key: "totalWeight",
+        formatter: (n) => `${n} kg`,
+      },
+      {
+        label: "Fat Percentage (%)",
+        key: "fatpercentage",
+        formatter: (n) => `${n}%`,
+      },
+      {
+        label: "Muscle Mass (kg)",
+        key: "muscleMass",
+        formatter: (n) => `${n} kg`,
+      },
+      { label: "Fat Mass (kg)", key: "fatMass", formatter: (n) => `${n} kg` },
+      {
+        label: "Metabolic Age (years)",
+        key: "metabolicAge",
+        formatter: (n) => `${n}`,
+      },
+      {
+        label: "BMI",
+        key: "bmi",
+        formatter: (n) => `${n}`,
+      },
+      {
+        label: "Total Body Water (%)",
+        key: "tbwPercentage",
+        formatter: (n) => `${n} %`,
+      },
+      // {
+      //   label: "Visceral Fat Rating",
+      //   key: "visceralFatRating",
+      //   formatter: (n) => `${n}`,
+      // },
+    ];
 
   const graphColor = useMemo(() => {
     if (isViewingFriend) {
@@ -157,7 +157,6 @@ const CurrentStatsComponent = ({
       </div>
 
       <div>
-        AI THING
         <StatsAiInsights trendData={trendData} />
       </div>
 
@@ -236,7 +235,7 @@ const CurrentStatsComponent = ({
                   index="axisDate"
                   categories={[label]}
                   valueFormatter={formatter}
-                  onValueChange={(v: any) => {}}
+                  onValueChange={(v: any) => { }}
                   {...getAxisRange(trendData, key)}
                 />
               </div>

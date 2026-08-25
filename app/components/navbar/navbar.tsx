@@ -1,18 +1,16 @@
 "use client";
 
-import { token } from "@/app/theme";
-import Link from "next/link";
-import styles from "./navbar.module.css";
-import {
-  House,
-  ScanLine,
-  Users,
-  CircleUserRound,
-  ChartColumn,
-} from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
+import { token } from "@/app/theme";
+import {
+  ChartColumn,
+  ScanLine,
+  Users
+} from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition } from "react";
+import styles from "./navbar.module.css";
 const Navbar = () => {
   const { user } = useAuth();
   const pathname = usePathname();
