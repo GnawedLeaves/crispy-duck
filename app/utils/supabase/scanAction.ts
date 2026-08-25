@@ -24,19 +24,18 @@ export interface StorageUploadResult {
 }
 
 // 1. Accepts FormData to safely bridge Next.js Server Action boundary on iOS WebKit
+// In scanAction.ts:
 export async function uploadScanToStorage(
-  formData: FormData,
+  file: File,
 ): Promise<StorageUploadResult> {
-  const file = formData.get("file") as File | null;
-
-  if (!file || file.size === 0) {
-    return {
-      success: false,
-      error: "No file was provided or file buffer is empty.",
-    };
+  if (!file) {
+    return { success: false, error: "No file was provided." };
   }
 
   try {
+    // Convert File to ArrayBuffer on the server side to fix iOS WebKit bugs
+    const fileArrayBuffer = await file.arrayBuffer();
+
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
@@ -44,21 +43,7 @@ export async function uploadScanToStorage(
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `uploads/${Date.now()}_${fileName}`;
 
-    let resolvedMimeType = file.type;
-    if (!resolvedMimeType) {
-      if (fileExt === "heic" || fileExt === "heif") {
-        resolvedMimeType = "image/heic";
-      } else if (fileExt === "jpg" || fileExt === "jpeg") {
-        resolvedMimeType = "image/jpeg";
-      } else if (fileExt === "png") {
-        resolvedMimeType = "image/png";
-      } else {
-        resolvedMimeType = "application/octet-stream";
-      }
-    }
-
-    // 2. Convert File to ArrayBuffer to bypass iOS streaming serialization bugs
-    const fileArrayBuffer = await file.arrayBuffer();
+    let resolvedMimeType = file.type || "image/jpeg";
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("scans")
