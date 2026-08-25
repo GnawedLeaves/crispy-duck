@@ -109,7 +109,9 @@ export async function processScanFile(
 // 3. Takes FormData directly from the client
 export async function handleFileUpload(formData: FormData) {
   const file = formData.get("file") as File | null;
-  const uploadResult = await uploadScanToStorage(formData);
+  if (!file) return;
+  
+  const uploadResult = await uploadScanToStorage(file);
 
   if (!uploadResult.success || !uploadResult.filePath) return;
 

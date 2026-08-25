@@ -1,11 +1,10 @@
 // app/scan/page.tsx (or wherever your scan route lives)
+import { handleFileUpload } from "@/app/utils/supabase/scanAction";
 import { createClient } from "@/app/utils/supabase/server";
 import { cookies } from "next/headers";
-import { handleFileUpload } from "@/app/utils/supabase/scanAction";
 import { redirect } from "next/navigation";
-import ScannerView from "./components/scannerview";
-import ProfileBanner from "../components/profile/profileBanner";
 import { ViewTransition } from "react";
+import ScannerView from "./components/scannerview";
 
 export default async function ScanPage() {
   const cookieStore = await cookies();
@@ -16,13 +15,19 @@ export default async function ScanPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const handleFileUploadWrapper = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return handleFileUpload(formData);
+  };
+
   return (
     <ViewTransition>
       <main className="contentLayout">
         <div className="text-4xl text-center mb-4 font-bold">Scan</div>
 
         <ScannerView
-          handleFileUpload={handleFileUpload}
+          handleFileUpload={handleFileUploadWrapper}
           currentUserId={user.id}
         />
       </main>
