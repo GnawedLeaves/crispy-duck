@@ -3,7 +3,8 @@
 import { token } from "@/app/theme";
 import { useAiInsight } from "@/app/utils/hooks/useAiInsight";
 import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
-import { RotateCcw, Sparkles, X } from "lucide-react";
+import { Check, Copy, RotateCcw, Sparkles, X } from "lucide-react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface StatsAiInsightsProps {
@@ -22,7 +23,7 @@ Return 2 sections, bolded: KEY TRENDS and PERFORMANCE INSIGHTS & ACTION PLAN`;
 
 const StatsAiInsights = ({ trendData }: StatsAiInsightsProps) => {
   const { insight, isLoading = true, error, generate, clear: clearInsight } = useAiInsight();
-
+  const [copied, setCopied] = useState(false);
 
   const handleGenerateInsights = () => {
     if (!trendData || trendData.length === 0) return;
@@ -33,50 +34,102 @@ const StatsAiInsights = ({ trendData }: StatsAiInsightsProps) => {
       tone: "motivating, athletic, and direct",
       context: trendData,
     });
-  }
+  };
 
   const handleClearInsight = () => {
-    clearInsight()
-  }
+    clearInsight();
+  };
 
   const handleRegenerateInsight = () => {
-    handleClearInsight()
-    handleGenerateInsights()
-  }
+    handleClearInsight();
+    handleGenerateInsights();
+  };
 
+  const handleCopyInsight = async () => {
+    if (!insight) return;
+    try {
+      await navigator.clipboard.writeText(insight);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   if (error) return <div>Failed to load insights.{error}</div>;
 
   return (
     <div className="py-8 rounded-lg bg-card text-card-foreground flexCenter">
-      {trendData && trendData.length > 0 && !isLoading && !insight &&
-        <button className="standardButton flex gap-2" style={{ background: token.light.primaryColor }} onClick={() => { handleGenerateInsights() }}>  <Sparkles />AI Analysis</button>
-      }
-      {isLoading && <div className="flexCenter gap-2"><span className="loading loading-spinner loading-md"></span>Analysing, do not leave this page.</div>}
-
-      {insight && <div>
-        <div className="flex justify-between py-4 ">
-          <h2 className="font-bold text-lg mb-2">Crispy Duck AI Analysis</h2>
-          <div className="flex gap-2">
-            <button className="standardButton flexCenter" style={{
-              width: "2.5rem",
-              height: "2.5rem",
-            }} onClick={() => { handleRegenerateInsight() }}><RotateCcw /></button>
-            <button className="standardButton flexCenter" style={{
-              width: "2.5rem",
-              height: "2.5rem",
-            }} onClick={() => { handleClearInsight() }}><X /></button>
-          </div>
-
+      {trendData && trendData.length > 0 && !isLoading && !insight && (
+        <button
+          className="standardButton flex gap-2"
+          style={{ background: token.light.primaryColor }}
+          onClick={handleGenerateInsights}
+        >
+          <Sparkles />
+          AI Analysis
+        </button>
+      )}
+      {isLoading && (
+        <div className="flexCenter gap-2">
+          <span className="loading loading-spinner loading-md"></span>
+          Analysing, do not leave this page.
         </div>
-        <div className="cardWithShadow">
-          <div className="prose prose-sm dark:prose-invert [&_p]:mb-6 [&_ul]:mb-6 [&_li]:mb-3">
-            <ReactMarkdown>{insight}</ReactMarkdown>
+      )}
+
+      {insight && (
+        <div>
+          <div className="flex justify-between py-4 ">
+            <h2 className="font-bold text-xl mb-2 flex gap-2">
+
+              <Sparkles />
+              AI Analysis</h2>
+            <div className="flex gap-2">
+
+              <button
+                className="standardButton flexCenter"
+                style={{
+                  width: "2.5rem",
+                  height: "2.5rem",
+                }}
+                onClick={handleRegenerateInsight}
+                title="Regenerate"
+              >
+                <RotateCcw />
+              </button>
+              <button
+                className="standardButton flexCenter"
+                style={{
+                  width: "2.5rem",
+                  height: "2.5rem",
+                }}
+                onClick={handleClearInsight}
+                title="Close"
+              >
+                <X />
+              </button>
+            </div>
+          </div>
+          <div className="cardWithShadow">
+            <div className="flex justify-end">
+              <button
+                className="standardButton flexCenter"
+                style={{
+                  width: "2.5rem",
+                  height: "2.5rem",
+                }}
+                onClick={handleCopyInsight}
+                title="Copy to clipboard"
+              >
+                {copied ? <Check /> : <Copy />}
+              </button></div>
+            <div className="prose prose-sm dark:prose-invert [&_p]:mb-6 [&_ul]:mb-6 [&_li]:mb-3">
+
+              <ReactMarkdown>{insight}</ReactMarkdown>
+            </div>
           </div>
         </div>
-      </div>
-      }
-
+      )}
     </div>
   );
 };
