@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.51",
     "@remixicon/react": "^4.9.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.107.0",
+    "ai": "^7.0.79",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
     "heic2any": "^0.0.4",

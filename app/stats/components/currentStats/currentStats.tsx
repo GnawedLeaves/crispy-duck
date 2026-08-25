@@ -14,6 +14,7 @@ import { updateUserProfileGraphColor } from "@/app/utils/login/authUtils";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/components/toast/toastNotification";
 import { token } from "@/app/theme";
+import StatsAiInsights from "./statsAiInsights";
 
 interface CurrentStatsComponentProps {
   trendData: BodyScanDataPoint[];
@@ -153,6 +154,11 @@ const CurrentStatsComponent = ({
     <div>
       <div className="text-3xl text-center mb-4 font-bold">
         Stats ({trendData?.length})
+      </div>
+
+      <div>
+        AI THING
+        <StatsAiInsights trendData={trendData} />
       </div>
 
       {trendData?.length < 1 && (
