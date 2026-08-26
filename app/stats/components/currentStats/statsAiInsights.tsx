@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 
 interface StatsAiInsightsProps {
   trendData: BodyScanDataPoint[];
+  isViewingFriend: boolean;
 }
 
 const SYSTEM_INSTRUCTION = `You are an expert fitness, nutrition, and body composition analyst for Crispy Duck. 
@@ -21,8 +22,17 @@ Keep responses formatted entirely in clear bullet points with a motivating, coac
 Keep responses short and add an extra spacings in between each paragraph
 Return 2 sections, bolded: KEY TRENDS and PERFORMANCE INSIGHTS & ACTION PLAN`;
 
-const StatsAiInsights = ({ trendData }: StatsAiInsightsProps) => {
-  const { insight, isLoading = true, error, generate, clear: clearInsight } = useAiInsight();
+const StatsAiInsights = ({
+  trendData,
+  isViewingFriend,
+}: StatsAiInsightsProps) => {
+  const {
+    insight,
+    isLoading = true,
+    error,
+    generate,
+    clear: clearInsight,
+  } = useAiInsight();
   const [copied, setCopied] = useState(false);
 
   const handleGenerateInsights = () => {
@@ -57,6 +67,7 @@ const StatsAiInsights = ({ trendData }: StatsAiInsightsProps) => {
   };
 
   if (error) return <div>Failed to load insights.{error}</div>;
+  if (isViewingFriend) return;
 
   return (
     <div className="py-8 rounded-lg bg-card text-card-foreground flexCenter">
@@ -81,11 +92,10 @@ const StatsAiInsights = ({ trendData }: StatsAiInsightsProps) => {
         <div>
           <div className="flex justify-between py-4 ">
             <h2 className="font-bold text-xl mb-2 flex gap-2">
-
               <Sparkles />
-              AI Analysis</h2>
+              AI Analysis
+            </h2>
             <div className="flex gap-2">
-
               <button
                 className="standardButton flexCenter"
                 style={{
@@ -122,9 +132,9 @@ const StatsAiInsights = ({ trendData }: StatsAiInsightsProps) => {
                 title="Copy to clipboard"
               >
                 {copied ? <Check /> : <Copy />}
-              </button></div>
+              </button>
+            </div>
             <div className="prose prose-sm dark:prose-invert [&_p]:mb-6 [&_ul]:mb-6 [&_li]:mb-3">
-
               <ReactMarkdown>{insight}</ReactMarkdown>
             </div>
           </div>

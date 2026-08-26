@@ -71,43 +71,43 @@ const CurrentStatsComponent = ({
     key: ScanDataKey;
     formatter: (n: number) => string;
   }[] = [
-      {
-        label: "Total Weight (kg)",
-        key: "totalWeight",
-        formatter: (n) => `${n} kg`,
-      },
-      {
-        label: "Fat Percentage (%)",
-        key: "fatpercentage",
-        formatter: (n) => `${n}%`,
-      },
-      {
-        label: "Muscle Mass (kg)",
-        key: "muscleMass",
-        formatter: (n) => `${n} kg`,
-      },
-      { label: "Fat Mass (kg)", key: "fatMass", formatter: (n) => `${n} kg` },
-      {
-        label: "Metabolic Age (years)",
-        key: "metabolicAge",
-        formatter: (n) => `${n}`,
-      },
-      {
-        label: "BMI",
-        key: "bmi",
-        formatter: (n) => `${n}`,
-      },
-      {
-        label: "Total Body Water (%)",
-        key: "tbwPercentage",
-        formatter: (n) => `${n} %`,
-      },
-      // {
-      //   label: "Visceral Fat Rating",
-      //   key: "visceralFatRating",
-      //   formatter: (n) => `${n}`,
-      // },
-    ];
+    {
+      label: "Total Weight (kg)",
+      key: "totalWeight",
+      formatter: (n) => `${n} kg`,
+    },
+    {
+      label: "Fat Percentage (%)",
+      key: "fatpercentage",
+      formatter: (n) => `${n}%`,
+    },
+    {
+      label: "Muscle Mass (kg)",
+      key: "muscleMass",
+      formatter: (n) => `${n} kg`,
+    },
+    { label: "Fat Mass (kg)", key: "fatMass", formatter: (n) => `${n} kg` },
+    {
+      label: "Metabolic Age (years)",
+      key: "metabolicAge",
+      formatter: (n) => `${n}`,
+    },
+    {
+      label: "BMI",
+      key: "bmi",
+      formatter: (n) => `${n}`,
+    },
+    {
+      label: "Total Body Water (%)",
+      key: "tbwPercentage",
+      formatter: (n) => `${n} %`,
+    },
+    // {
+    //   label: "Visceral Fat Rating",
+    //   key: "visceralFatRating",
+    //   formatter: (n) => `${n}`,
+    // },
+  ];
 
   const graphColor = useMemo(() => {
     if (isViewingFriend) {
@@ -157,7 +157,10 @@ const CurrentStatsComponent = ({
       </div>
 
       <div>
-        <StatsAiInsights trendData={trendData} />
+        <StatsAiInsights
+          trendData={trendData}
+          isViewingFriend={isViewingFriend}
+        />
       </div>
 
       {trendData?.length < 1 && (
@@ -235,7 +238,7 @@ const CurrentStatsComponent = ({
                   index="axisDate"
                   categories={[label]}
                   valueFormatter={formatter}
-                  onValueChange={(v: any) => { }}
+                  onValueChange={(v: any) => {}}
                   {...getAxisRange(trendData, key)}
                 />
               </div>
