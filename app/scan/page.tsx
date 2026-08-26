@@ -16,6 +16,7 @@ export default async function ScanPage() {
   if (!user) redirect("/login");
 
   const handleFileUploadWrapper = async (file: File) => {
+    "use server";
     const formData = new FormData();
     formData.append("file", file);
     return handleFileUpload(formData);
