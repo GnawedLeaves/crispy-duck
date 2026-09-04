@@ -19,6 +19,47 @@ const OPTIONAL_FIELDS = ["degreeOfObesity", "idealBodyWeight"];
 
 type ScanProgressStage = "upload" | "processing" | "retrieving";
 
+const MAX_UPLOAD_BYTES = 9 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 60_000;
+const PROCESSING_TIMEOUT_MS = 120_000;
+
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number) =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error("The request timed out. Please try again.")),
+        timeoutMs,
+      );
+    }),
+  ]);
+
+const prepareImageFile = async (file: File): Promise<File> => {
+  const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const isHeic =
+    fileExt === "heic" ||
+    fileExt === "heif" ||
+    file.type.toLowerCase().includes("heic") ||
+    file.type.toLowerCase().includes("heif") ||
+    file.type === "";
+
+  if (!isHeic) return file;
+
+  const heic2any = (await import("heic2any")).default;
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.8,
+  });
+  const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+
+  return new File(
+    [convertedBlob],
+    file.name.replace(/\.[^/.]+$/, ".jpg"),
+    { type: "image/jpeg", lastModified: Date.now() },
+  );
+};
+
 interface ScanProgressStep {
   id: ScanProgressStage;
   label: string;
@@ -149,26 +190,21 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     const files = e.target.files;
     if (!files?.length) return;
 
-    let file = files[0];
+    try {
+      const file = await prepareImageFile(files[0]);
+      if (file.size > MAX_UPLOAD_BYTES) {
+        throw new Error("This image is larger than 9 MB. Please choose a smaller image.");
+      }
 
-    // Convert HEIC to JPEG for compatibility
-    if (file.type === "image/heic" || file.type === "image/heif") {
-      const heic2any = (await import("heic2any")).default;
-      const converted = await heic2any({
-        blob: file,
-        toType: "image/jpeg",
-        quality: 0.8,
-      });
-      file = new File(
-        [converted as Blob],
-        file.name.replace(/\.heic$/i, ".jpeg"),
-        { type: "image/jpeg" },
-      );
+      setInputFile(file);
+      setScanError(null);
+      const base64 = await fileToBase64(file);
+      setImagePreview(base64);
+    } catch (error: any) {
+      setInputFile(null);
+      setImagePreview(null);
+      setScanError(error?.message ?? "We could not prepare this image. Please try another file.");
     }
-    setInputFile(file);
-    setScanError(null);
-    const base64 = await fileToBase64(file);
-    setImagePreview(base64);
   };
 
   const handleConfirmUpload = withDelay(async () => {
@@ -179,50 +215,64 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setProgressSteps(createDefaultProgressSteps());
     setProgressMessage("Preparing your scan...");
 
-    const uploadResult = await uploadScanToStorage(inputFile);
-    if (!uploadResult.success || !uploadResult.filePath) {
-      setScanError(
-        uploadResult.error ??
-          "We could not upload your scan image. Please try again.",
+    try {
+      const uploadResult = await withTimeout(
+        uploadScanToStorage(inputFile),
+        UPLOAD_TIMEOUT_MS,
       );
+      if (!uploadResult.success || !uploadResult.filePath) {
+        throw new Error(
+          uploadResult.error ??
+            "We could not upload your scan image. Please try again.",
+        );
+      }
+
+      setProgressSteps((prev) =>
+        prev.map((step) =>
+          step.id === "upload"
+            ? { ...step, done: true, active: false }
+            : step.id === "processing"
+              ? { ...step, active: true }
+              : step,
+        ),
+      );
+      setProgressMessage("Reading your scan with Google AI...");
+
+      const data = await withTimeout(
+        processScanFile(
+          uploadResult.filePath,
+          uploadResult.mimeType ?? inputFile.type,
+        ),
+        PROCESSING_TIMEOUT_MS,
+      );
+      const text = data?.data?.text;
+
+      if (!text) {
+        throw new Error(
+          "We could not read this scan. Please try a clearer image.",
+        );
+      }
+
+      setProgressSteps((prev) =>
+        prev.map((step) =>
+          step.id === "processing"
+            ? { ...step, done: true, active: false }
+            : step.id === "retrieving"
+              ? { ...step, active: true }
+              : step,
+        ),
+      );
+      setProgressMessage("Collecting your scan details...");
+      setRawResult(text);
+    } catch (error: any) {
+      console.error("Scan upload failed:", error);
+      setScanError(error?.message ?? "We could not upload your scan. Please try again.");
+      setProgressSteps((prev) =>
+        prev.map((step) => ({ ...step, active: false })),
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setProgressSteps((prev) =>
-      prev.map((step) =>
-        step.id === "upload"
-          ? { ...step, done: true, active: false }
-          : step.id === "processing"
-            ? { ...step, active: true }
-            : step,
-      ),
-    );
-    setProgressMessage("Reading your scan with Google AI...");
-
-    const data = await processScanFile(
-      uploadResult.filePath,
-      uploadResult.mimeType ?? inputFile.type,
-    );
-    const text = data?.data.text;
-
-    if (!text) {
-      setScanError("We could not read this scan. Please try a clearer image.");
-      setLoading(false);
-      return;
-    }
-
-    setProgressSteps((prev) =>
-      prev.map((step) =>
-        step.id === "processing"
-          ? { ...step, done: true, active: false }
-          : step.id === "retrieving"
-            ? { ...step, active: true }
-            : step,
-      ),
-    );
-    setProgressMessage("Collecting your scan details...");
-    setRawResult(text);
   });
 
   const handleReplaceImage = withDelay(resetScanState);
@@ -365,7 +415,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
             Add File
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               onChange={handleFileChange}
               className="hidden"
             />
