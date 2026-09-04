@@ -13,6 +13,7 @@ interface ScanFormProps {
 }
 
 // 1. Safe Client-Side HEIC Converter with error logging return
+// ScanForm.tsx
 async function processAndConvertFile(
   file: File,
   onError: (msg: string) => void,
@@ -22,13 +23,14 @@ async function processAndConvertFile(
     fileExt === "heic" ||
     fileExt === "heif" ||
     file.type.includes("heic") ||
-    file.type.includes("heif") ||
-    file.type === "";
+    file.type.includes("heif");
 
   if (!isHeic) {
+    // ✅ Already JPEG/PNG/etc
     return file;
   }
 
+  // 🔴 HEIC detected—MUST convert or reject
   try {
     const heic2any = (await import("heic2any")).default;
 
@@ -42,6 +44,10 @@ async function processAndConvertFile(
       ? convertedBlob[0]
       : convertedBlob;
 
+    if (resultBlob.size === 0) {
+      throw new Error("HEIC conversion produced empty blob");
+    }
+
     const safeName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
 
     return new File([resultBlob], safeName, {
@@ -51,8 +57,11 @@ async function processAndConvertFile(
   } catch (error: any) {
     const errText = error?.message || String(error);
     console.error("HEIC conversion failed:", error);
-    onError(`HEIC conversion failed (${errText}). Using raw file.`);
-    return file;
+    // 🔴 REJECT the upload instead of falling back
+    onError(
+      `iPhone photos must be converted to JPEG first. Conversion failed: ${errText}. Try using Screenshot or Files app.`
+    );
+    throw error; // Stop the upload
   }
 }
 
@@ -65,39 +74,38 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
   // State for on-screen debug errors
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setErrorMessage(null); // Reset previous errors
-    const files = e.target.files;
+const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  setErrorMessage(null);
+  const files = e.target.files;
 
-    if (files && files.length > 0) {
-      setLoading(true);
-      const rawFile = files[0];
+  if (files && files.length > 0) {
+    setLoading(true);
+    const rawFile = files[0];
 
-      try {
-        const readyFile = await processAndConvertFile(rawFile, (msg) =>
-          setErrorMessage(msg),
-        );
-        setInputFile(readyFile);
+    try {
+      const readyFile = await processAndConvertFile(rawFile, (msg) =>
+        setErrorMessage(msg),
+      );
+      // ✅ If we get here, conversion succeeded
+      setInputFile(readyFile);
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setImagePreview(event.target?.result as string);
-          setLoading(false);
-        };
-        reader.onerror = () => {
-          setErrorMessage(
-            "FileReader failed to read the selected file on this device.",
-          );
-          setLoading(false);
-        };
-        reader.readAsDataURL(readyFile);
-      } catch (err: any) {
-        setErrorMessage(`File selection error: ${err?.message || String(err)}`);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target?.result as string);
         setLoading(false);
-      }
+      };
+      reader.onerror = () => {
+        setErrorMessage("FileReader failed to read the selected file on this device.");
+        setLoading(false);
+      };
+      reader.readAsDataURL(readyFile);
+    } catch (err: any) {
+      // ✅ Catch conversion errors
+      setErrorMessage(`File selection error: ${err?.message || String(err)}`);
+      setLoading(false);
     }
-  };
-
+  }
+};
   const handleConfirmUpload = withDelay(async () => {
     if (inputFile) {
       setLoading(true);
