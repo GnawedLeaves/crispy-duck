@@ -70,6 +70,7 @@ export async function uploadScanToStorage(file: File): Promise<StorageUploadResu
     };
   }
 }
+// In scanAction.ts
 export async function processScanFile(
   filePath: string,
   mimeType: string,
@@ -82,26 +83,27 @@ export async function processScanFile(
 
     const { data: functionData, error: functionError } =
       await supabase.functions.invoke("process-scan", {
-        body: {
-          filePath,
-          mimeType,
-        },
+        body: { filePath, mimeType },
       });
 
     if (functionError) {
-      console.error("❌ SUPABASE FUNCTION DETAILED ERROR:", {
+      console.error("❌ FUNCTION ERROR:", {
         name: functionError.name,
         message: functionError.message,
         status: functionError.status,
         context: functionError.context,
       });
-
       throw new Error(`Edge function failed: ${functionError.message}`);
     }
 
+    // ⬇️ ADD THIS—log the actual response
+    console.log("✅ FUNCTION RESPONSE:", functionData);
+
     return functionData as ProcessScanResponse;
   } catch (err: any) {
-    console.error(err);
+    console.error("❌ PROCESS SCAN ERROR:", err);
+    // ⬇️ Re-throw so client can see it
+    throw err;
   }
 }
 
