@@ -23,31 +23,34 @@ export interface StorageUploadResult {
   error?: string;
 }
 
-// 1. Accepts FormData to safely bridge Next.js Server Action boundary on iOS WebKit
-// In scanAction.ts:
 export async function uploadScanToStorage(
   file: File,
 ): Promise<StorageUploadResult> {
-  if (!file) {
-    return { success: false, error: "No file was provided." };
+  if (!file || file.size === 0) {
+    return { success: false, error: "No valid file payload received." };
   }
 
   try {
-    // Convert File to ArrayBuffer on the server side to fix iOS WebKit bugs
-    const fileArrayBuffer = await file.arrayBuffer();
+    // Standardize buffer handling across iOS Safari and Node runtimes
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const rawExt = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const fileExt = rawExt === "heic" || rawExt === "heif" ? "jpg" : rawExt;
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `uploads/${Date.now()}_${fileName}`;
 
-    let resolvedMimeType = file.type || "image/jpeg";
+    let resolvedMimeType = file.type;
+    if (!resolvedMimeType || resolvedMimeType === "" || resolvedMimeType.includes("heic")) {
+      resolvedMimeType = "image/jpeg";
+    }
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("scans")
-      .upload(filePath, fileArrayBuffer, {
+      .upload(filePath, buffer, {
         contentType: resolvedMimeType,
         cacheControl: "3600",
         upsert: false,
@@ -63,7 +66,7 @@ export async function uploadScanToStorage(
       mimeType: resolvedMimeType,
     };
   } catch (err: any) {
-    console.error(err);
+    console.error("Storage upload error:", err);
     return {
       success: false,
       error: err?.message ?? "We could not upload your scan image.",
@@ -106,88 +109,18 @@ export async function processScanFile(
   }
 }
 
-// 3. Takes FormData directly from the client
 export async function handleFileUpload(formData: FormData) {
   const file = formData.get("file") as File | null;
   if (!file) return;
-  
+
   const uploadResult = await uploadScanToStorage(file);
 
-  if (!uploadResult.success || !uploadResult.filePath) return;
+  if (!uploadResult.success || !uploadResult.filePath) {
+    throw new Error(uploadResult.error || "Upload failed");
+  }
 
   return processScanFile(
     uploadResult.filePath,
-    uploadResult.mimeType ?? file?.type ?? "image/jpeg",
+    uploadResult.mimeType ?? "image/jpeg",
   );
 }
-
-export const uploadScanData = async (
-  scannedData: ITautaScanData,
-  currentUserId: string,
-) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const formattedDate = dayjs(scannedData.scanDate, "DD/MMM/YYYY").format(
-    "YYYY-MM-DD",
-  );
-
-  const { data, error } = await supabase.from("tanita_scans").insert([
-    {
-      user_id: currentUserId,
-      scan_date: formattedDate,
-      scan_time: scannedData.scanTime,
-      weight: scannedData.weight,
-      clothes_weight: scannedData.clothesWeight,
-      fat_percentage: scannedData.fatPercentage,
-      fat_mass: scannedData.fatMass,
-      ffm: scannedData.ffm,
-      muscle_mass: scannedData.muscleMass,
-      tbw: scannedData.tbw,
-      tbw_percent: scannedData.tbwPercent,
-      bone_mass: scannedData.boneMass,
-      bmr: scannedData.bmr,
-      metabolic_age: scannedData.metabolicAge,
-      visceral_fat_rating: scannedData.visceralFatRating,
-      bmi: scannedData.bmi,
-      degree_of_obesity: scannedData.degreeOfObesity || null,
-      ideal_body_weight: scannedData.idealBodyWeight || null,
-    },
-  ]);
-
-  return { data, error };
-};
-
-export const getUserTanitaScans = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return {
-      data: null,
-      error: { message: "Unauthorized access.", code: "401" },
-    };
-  }
-
-  const { data, error } = await supabase
-    .from("tanita_scans")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("scan_date", { ascending: false });
-
-  if (error) {
-    return {
-      data: null,
-      error: {
-        message: error.message,
-        code: error.code,
-      },
-    };
-  }
-
-  return { data, error: null };
-};

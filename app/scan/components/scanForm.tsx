@@ -12,7 +12,7 @@ interface ScanFormProps {
   ) => Promise<ProcessScanResponse | undefined>;
 }
 
-// 1. Safe Client-Side HEIC Converter with error logging return
+// Fixed HEIC Converter specifically for iOS WebKit
 async function processAndConvertFile(
   file: File,
   onError: (msg: string) => void,
@@ -38,13 +38,14 @@ async function processAndConvertFile(
       quality: 0.8,
     });
 
-    const resultBlob = Array.isArray(convertedBlob)
+    const singleBlob = Array.isArray(convertedBlob)
       ? convertedBlob[0]
       : convertedBlob;
 
     const safeName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
 
-    return new File([resultBlob], safeName, {
+    // Re-construct explicit File object to satisfy iOS WebKit metadata demands
+    return new File([singleBlob], safeName, {
       type: "image/jpeg",
       lastModified: Date.now(),
     });
@@ -61,12 +62,10 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
-  // State for on-screen debug errors
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setErrorMessage(null); // Reset previous errors
+    setErrorMessage(null);
     const files = e.target.files;
 
     if (files && files.length > 0) {
@@ -77,6 +76,12 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
         const readyFile = await processAndConvertFile(rawFile, (msg) =>
           setErrorMessage(msg),
         );
+        
+        // Prevent 0-byte file issues on iOS
+        if (readyFile.size === 0) {
+          throw new Error("Selected file is empty (0 bytes).");
+        }
+
         setInputFile(readyFile);
 
         const reader = new FileReader();
@@ -85,9 +90,7 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
           setLoading(false);
         };
         reader.onerror = () => {
-          setErrorMessage(
-            "FileReader failed to read the selected file on this device.",
-          );
+          setErrorMessage("FileReader failed on this device.");
           setLoading(false);
         };
         reader.readAsDataURL(readyFile);
@@ -105,14 +108,12 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
 
       try {
         const formData = new FormData();
-        formData.append("file", inputFile);
+        formData.append("file", inputFile, inputFile.name);
 
         const data = await handleFileUpload(formData);
 
         if (!data) {
-          setErrorMessage(
-            "Server returned no response or upload returned undefined.",
-          );
+          setErrorMessage("Server returned no response or upload failed.");
         } else if (data?.data?.text) {
           setResult(data.data.text);
         } else {
@@ -156,7 +157,6 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
 
   return (
     <div className="flexCenter flex-col gap-4 max-w-md mx-auto p-4">
-      {/* Visual Debug Error Banner */}
       {errorMessage && (
         <div className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm break-words">
           <strong className="font-bold block">Debug Log:</strong>
@@ -200,7 +200,7 @@ const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
               Add file
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,image/heic,image/heif"
                 onChange={handleFileChange}
                 className="hidden"
               />
