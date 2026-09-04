@@ -25,17 +25,13 @@ export interface StorageUploadResult {
 
 // 1. Accepts FormData to safely bridge Next.js Server Action boundary on iOS WebKit
 // In scanAction.ts:
-export async function uploadScanToStorage(
-  file: File,
-): Promise<StorageUploadResult> {
+export async function uploadScanToStorage(file: File): Promise<StorageUploadResult> {
   if (!file) {
     return { success: false, error: "No file was provided." };
   }
 
   try {
-    // Convert File to ArrayBuffer on the server side to fix iOS WebKit bugs
     const fileArrayBuffer = await file.arrayBuffer();
-
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
@@ -43,7 +39,11 @@ export async function uploadScanToStorage(
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `uploads/${Date.now()}_${fileName}`;
 
+    // ⬇️ Better MIME type detection
     let resolvedMimeType = file.type || "image/jpeg";
+    if (!file.type && (fileExt === "heic" || fileExt === "heif")) {
+      resolvedMimeType = "image/heic";
+    }
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("scans")
@@ -70,7 +70,6 @@ export async function uploadScanToStorage(
     };
   }
 }
-
 export async function processScanFile(
   filePath: string,
   mimeType: string,
