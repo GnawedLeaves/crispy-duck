@@ -43,21 +43,44 @@ const prepareImageFile = async (file: File): Promise<File> => {
     file.type.toLowerCase().includes("heif") ||
     file.type === "";
 
-  if (!isHeic) return file;
-
-  const heic2any = (await import("heic2any")).default;
-  const converted = await heic2any({
-    blob: file,
-    toType: "image/jpeg",
-    quality: 0.8,
+  console.log("🔍 FILE PREP:", {
+    name: file.name,
+    ext: fileExt,
+    type: file.type,
+    isHeic,
+    size: file.size,
   });
-  const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
 
-  return new File(
-    [convertedBlob],
-    file.name.replace(/\.[^/.]+$/, ".jpg"),
-    { type: "image/jpeg", lastModified: Date.now() },
-  );
+  if (!isHeic) {
+    console.log("✅ Not HEIC, using as-is");
+    return file;
+  }
+
+  console.log("🔄 HEIC detected, converting...");
+
+  try {
+    const heic2any = (await import("heic2any")).default;
+    console.log("✅ heic2any loaded");
+
+    const converted = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.8,
+    });
+    console.log("✅ Conversion successful");
+
+    const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+
+    return new File([convertedBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+  } catch (error: any) {
+    console.error("❌ HEIC conversion failed:", error);
+    throw new Error(
+      `Failed to convert HEIC: ${error?.message || String(error)}. Try a screenshot or JPEG instead.`,
+    );
+  }
 };
 
 interface ScanProgressStep {
@@ -191,19 +214,33 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     if (!files?.length) return;
 
     try {
+      console.log("📂 File selected, preparing...");
       const file = await prepareImageFile(files[0]);
+
       if (file.size > MAX_UPLOAD_BYTES) {
-        throw new Error("This image is larger than 9 MB. Please choose a smaller image.");
+        throw new Error(
+          "This image is larger than 9 MB. Please choose a smaller image.",
+        );
       }
+
+      console.log("✅ File prepared successfully:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
 
       setInputFile(file);
       setScanError(null);
       const base64 = await fileToBase64(file);
       setImagePreview(base64);
     } catch (error: any) {
+      console.error("❌ File preparation error:", error);
       setInputFile(null);
       setImagePreview(null);
-      setScanError(error?.message ?? "We could not prepare this image. Please try another file.");
+      setScanError(
+        error?.message ??
+          "We could not prepare this image. Please try another file.",
+      );
     }
   };
 
@@ -216,16 +253,29 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setProgressMessage("Preparing your scan...");
 
     try {
+      console.log("🚀 STARTING UPLOAD PROCESS");
+      console.log("📋 File to upload:", {
+        name: inputFile.name,
+        type: inputFile.type,
+        size: inputFile.size,
+      });
+
       const uploadResult = await withTimeout(
         uploadScanToStorage(inputFile),
         UPLOAD_TIMEOUT_MS,
       );
+
+      console.log("📦 Upload result received:", uploadResult);
+
       if (!uploadResult.success || !uploadResult.filePath) {
-        throw new Error(
+        const errorMsg =
           uploadResult.error ??
-            "We could not upload your scan image. Please try again.",
-        );
+          "We could not upload your scan image. Please try again.";
+        console.error("❌ Upload failed:", errorMsg);
+        throw new Error(errorMsg);
       }
+
+      console.log("✅ File uploaded successfully to:", uploadResult.filePath);
 
       setProgressSteps((prev) =>
         prev.map((step) =>
@@ -238,6 +288,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
       );
       setProgressMessage("Reading your scan with Google AI...");
 
+      console.log("🔄 Processing scan...");
       const data = await withTimeout(
         processScanFile(
           uploadResult.filePath,
@@ -245,13 +296,19 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         ),
         PROCESSING_TIMEOUT_MS,
       );
+
+      console.log("📥 Processing response:", data);
+
       const text = data?.data?.text;
 
       if (!text) {
+        console.error("❌ No text in response");
         throw new Error(
           "We could not read this scan. Please try a clearer image.",
         );
       }
+
+      console.log("✅ OCR text received, length:", text.length);
 
       setProgressSteps((prev) =>
         prev.map((step) =>
@@ -265,8 +322,10 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
       setProgressMessage("Collecting your scan details...");
       setRawResult(text);
     } catch (error: any) {
-      console.error("Scan upload failed:", error);
-      setScanError(error?.message ?? "We could not upload your scan. Please try again.");
+      console.error("❌ Scan upload process failed:", error);
+      const errorMsg =
+        error?.message ?? "We could not upload your scan. Please try again.";
+      setScanError(errorMsg);
       setProgressSteps((prev) =>
         prev.map((step) => ({ ...step, active: false })),
       );
@@ -278,7 +337,17 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const handleReplaceImage = withDelay(resetScanState);
 
   const processedResult = useMemo(() => {
-    if (rawResult) return parseTautaScan(rawResult);
+    if (rawResult) {
+      try {
+        console.log("📊 Parsing OCR result...");
+        const parsed = parseTautaScan(rawResult);
+        console.log("✅ Parse successful:", parsed);
+        return parsed;
+      } catch (e) {
+        console.error("❌ Parse error:", e);
+        return null;
+      }
+    }
   }, [rawResult]);
 
   // When scan result is ready, validate then move to edit step
@@ -382,9 +451,6 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
             <div className="flex items-center gap-3">
               <span className="loading loading-spinner loading-md" />
             </div>
-            {/* {progressMessage && (
-              <p className="text-sm opacity-60">{progressMessage}</p>
-            )} */}
             <AnimatedLoadingText
               messages={[
                 "Squeezing your fats...",
@@ -425,7 +491,9 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         {scanError && (
           <div className="cardWithShadow flex flex-col gap-3 text-center max-w-xs">
             <p className="text-sm font-semibold">⚠️ Couldn't read this image</p>
-            <p className="text-sm opacity-60">{scanError}</p>
+            <p className="text-sm opacity-60 whitespace-pre-wrap">
+              {scanError}
+            </p>
             <button
               className="standardButton bg-red-100!"
               onClick={handleReplaceImage}
