@@ -1,17 +1,13 @@
 "use client";
 
+import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
+import { token } from "@/app/theme";
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
-import {
-  processScanFile,
-  uploadScanToStorage,
-} from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
-import Link from "next/link";
-import { token } from "@/app/theme";
-import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
@@ -139,9 +135,8 @@ const ScanProgressChecklist = ({ steps }: { steps: ScanProgressStep[] }) => {
           return (
             <li
               key={step.id}
-              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                isActive ? "font-semibold" : "opacity-70"
-              }`}
+              className={`flex items-center gap-2 rounded-md px-2 py-1 ${isActive ? "font-semibold" : "opacity-70"
+                }`}
             >
               <span className="min-w-4 text-base">{icon}</span>
               <span>{step.label}</span>
@@ -153,6 +148,21 @@ const ScanProgressChecklist = ({ steps }: { steps: ScanProgressStep[] }) => {
   );
 };
 
+// Convert File to base64 string (without the data:xxx prefix)
+const fileToRawBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the "data:image/jpeg;base64," prefix
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+// Convert File to base64 for preview (with the data:xxx prefix)
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -177,7 +187,7 @@ type ViewStep = "scan" | "edit" | "success";
 
 const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   const [step, setStep] = useState<ViewStep>("scan");
-  const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [rawResult, setRawResult] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -198,7 +208,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     }
   }, []);
 
-  // Shared reset used by "replace image", "back from edit", and "scan another"
+  // Shared reset
   const resetScanState = () => {
     setInputFile(null);
     setImagePreview(null);
@@ -239,11 +249,12 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
       setImagePreview(null);
       setScanError(
         error?.message ??
-          "We could not prepare this image. Please try another file.",
+        "We could not prepare this image. Please try another file.",
       );
     }
   };
 
+  // ⭐ UPDATED: Send as base64 JSON instead of FormData
   const handleConfirmUpload = withDelay(async () => {
     if (!inputFile) return;
 
@@ -260,50 +271,67 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         size: inputFile.size,
       });
 
-      const uploadResult = await withTimeout(
-        uploadScanToStorage(inputFile),
-        UPLOAD_TIMEOUT_MS,
+      // Step 1: Convert file to base64 on client
+      console.log("📦 Converting file to base64...");
+      const base64 = await fileToRawBase64(inputFile);
+      console.log("✅ Base64 ready, length:", base64.length);
+
+      setProgressSteps((prev) =>
+        prev.map((s) =>
+          s.id === "upload"
+            ? { ...s, active: true }
+            : s,
+        ),
       );
 
-      console.log("📦 Upload result received:", uploadResult);
+      // Step 2: Send as JSON (avoids iOS Safari FormData bug)
+      console.log("📤 Sending to /api/scan as JSON...");
+      const apiResponse = await withTimeout(
+        fetch("/api/scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            base64,
+            fileName: inputFile.name,
+            mimeType: inputFile.type || "image/jpeg",
+          }),
+        }),
+        UPLOAD_TIMEOUT_MS + PROCESSING_TIMEOUT_MS,
+      );
 
-      if (!uploadResult.success || !uploadResult.filePath) {
-        const errorMsg =
-          uploadResult.error ??
-          "We could not upload your scan image. Please try again.";
-        console.error("❌ Upload failed:", errorMsg);
+      console.log("📦 API response status:", apiResponse.status);
+
+      if (!apiResponse.ok) {
+        let errorMsg = `Server error: ${apiResponse.status}`;
+        try {
+          const errorData = await apiResponse.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch { }
+        console.error("❌ API error:", errorMsg);
         throw new Error(errorMsg);
       }
 
-      console.log("✅ File uploaded successfully to:", uploadResult.filePath);
-
       setProgressSteps((prev) =>
-        prev.map((step) =>
-          step.id === "upload"
-            ? { ...step, done: true, active: false }
-            : step.id === "processing"
-              ? { ...step, active: true }
-              : step,
+        prev.map((s) =>
+          s.id === "upload"
+            ? { ...s, done: true, active: false }
+            : s.id === "processing"
+              ? { ...s, active: true }
+              : s,
         ),
       );
       setProgressMessage("Reading your scan with Google AI...");
 
-      console.log("🔄 Processing scan...");
-      const data = await withTimeout(
-        processScanFile(
-          uploadResult.filePath,
-          uploadResult.mimeType ?? inputFile.type,
-        ),
-        PROCESSING_TIMEOUT_MS,
-      );
-
-      console.log("📥 Processing response:", data);
+      const data = await apiResponse.json();
+      console.log("📥 API response data:", data);
 
       const text = data?.data?.text;
 
       if (!text) {
-        console.error("❌ No text in response");
+        console.error("❌ No text in response:", data);
         throw new Error(
+          data?.error ??
           "We could not read this scan. Please try a clearer image.",
         );
       }
@@ -311,12 +339,12 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
       console.log("✅ OCR text received, length:", text.length);
 
       setProgressSteps((prev) =>
-        prev.map((step) =>
-          step.id === "processing"
-            ? { ...step, done: true, active: false }
-            : step.id === "retrieving"
-              ? { ...step, active: true }
-              : step,
+        prev.map((s) =>
+          s.id === "processing"
+            ? { ...s, done: true, active: false }
+            : s.id === "retrieving"
+              ? { ...s, active: true }
+              : s,
         ),
       );
       setProgressMessage("Collecting your scan details...");
@@ -327,7 +355,7 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         error?.message ?? "We could not upload your scan. Please try again.";
       setScanError(errorMsg);
       setProgressSteps((prev) =>
-        prev.map((step) => ({ ...step, active: false })),
+        prev.map((s) => ({ ...s, active: false })),
       );
     } finally {
       setLoading(false);
@@ -361,8 +389,8 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
         `This image doesn't look like a valid Tanita scan: ${emptyCount} fields couldn't be read. Please upload a clearer photo of the printout.`,
       );
       setProgressSteps((prev) =>
-        prev.map((step) =>
-          step.id === "retrieving" ? { ...step, active: false } : step,
+        prev.map((s) =>
+          s.id === "retrieving" ? { ...s, active: false } : s,
         ),
       );
       setLoading(false);
@@ -370,10 +398,10 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     }
 
     setProgressSteps((prev) =>
-      prev.map((step) =>
-        step.id === "retrieving"
-          ? { ...step, done: true, active: false }
-          : step,
+      prev.map((s) =>
+        s.id === "retrieving"
+          ? { ...s, done: true, active: false }
+          : s,
       ),
     );
     setProgressMessage("Scan is ready to review.");

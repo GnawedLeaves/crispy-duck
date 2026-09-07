@@ -115,6 +115,11 @@ Try these fixes:
   }
 }
 
+/**
+ * @deprecated `ScanForm` is deprecated and will be removed in a future release.
+ * Use `scannerView` instead.
+ */
+
 const ScanForm = ({ handleFileUpload }: ScanFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [inputFile, setInputFile] = useState<File | null>(null);
