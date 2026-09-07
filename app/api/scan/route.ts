@@ -1,6 +1,6 @@
 // app/api/scan/route.ts
+import { uploadScanToStorageFromBuffer, processScanFile } from "@/app/utils/supabase/scanAction";
 import { NextResponse } from "next/server";
-import { processScanFile, uploadScanToStorageFromBuffer } from "../supabase/scanAction";
 
 // Increase body size limit for large images
 export const maxDuration = 120; // seconds
