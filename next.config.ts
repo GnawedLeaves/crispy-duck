@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  // Show real errors in development
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,
+  },
+  // Don't hide errors during development
+  productionBrowserSourceMaps: true,
   /* config options here */
   experimental: {
     viewTransition: true,
