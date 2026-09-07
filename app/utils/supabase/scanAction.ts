@@ -221,6 +221,20 @@ export async function processScanFile(
     throw err;
   }
 }
+// 3. Takes FormData directly from the client
+export async function handleFileUpload(formData: FormData) {
+  const file = formData.get("file") as File | null;
+  if (!file) return;
+
+  const uploadResult = await uploadScanToStorage(file);
+
+  if (!uploadResult.success || !uploadResult.filePath) return;
+
+  return processScanFile(
+    uploadResult.filePath,
+    uploadResult.mimeType ?? file?.type ?? "image/jpeg",
+  );
+}
 
 export async function uploadScanData(
   scannedData: ITautaScanData,
