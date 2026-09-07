@@ -1,17 +1,13 @@
 "use client";
 
+import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
+import { token } from "@/app/theme";
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
-import {
-  processScanFile,
-  uploadScanToStorage,
-} from "@/app/utils/supabase/scanAction";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
-import Link from "next/link";
-import { token } from "@/app/theme";
-import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
@@ -75,9 +71,8 @@ const ScanProgressChecklist = ({ steps }: { steps: ScanProgressStep[] }) => {
           return (
             <li
               key={step.id}
-              className={`flex items-center gap-2 rounded-md px-2 py-1 ${
-                isActive ? "font-semibold" : "opacity-70"
-              }`}
+              className={`flex items-center gap-2 rounded-md px-2 py-1 ${isActive ? "font-semibold" : "opacity-70"
+                }`}
             >
               <span className="min-w-4 text-base">{icon}</span>
               <span>{step.label}</span>
@@ -93,6 +88,19 @@ const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+// Convert File to raw base64 string (without the data:xxx prefix)
+const fileToRawBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -179,50 +187,70 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setProgressSteps(createDefaultProgressSteps());
     setProgressMessage("Preparing your scan...");
 
-    const uploadResult = await uploadScanToStorage(inputFile);
-    if (!uploadResult.success || !uploadResult.filePath) {
-      setScanError(
-        uploadResult.error ??
-          "We could not upload your scan image. Please try again.",
+    try {
+      // Step 1: Convert file to base64 on client
+      const base64 = await fileToRawBase64(inputFile);
+
+      // Step 2: Send as JSON (fixes iOS Safari + Vercel FormData bug)
+      const apiResponse = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          base64,
+          fileName: inputFile.name,
+          mimeType: inputFile.type || "image/jpeg",
+        }),
+      });
+
+      if (!apiResponse.ok) {
+        let errorMsg = `Server error: ${apiResponse.status}`;
+        try {
+          const errorData = await apiResponse.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch { }
+        throw new Error(errorMsg);
+      }
+
+      setProgressSteps((prev) =>
+        prev.map((step) =>
+          step.id === "upload"
+            ? { ...step, done: true, active: false }
+            : step.id === "processing"
+              ? { ...step, active: true }
+              : step,
+        ),
       );
+      setProgressMessage("Reading your scan with Google AI...");
+
+      const data = await apiResponse.json();
+      const text = data?.data?.text;
+
+      if (!text) {
+        throw new Error(
+          data?.error ??
+          "We could not read this scan. Please try a clearer image.",
+        );
+      }
+
+      setProgressSteps((prev) =>
+        prev.map((step) =>
+          step.id === "processing"
+            ? { ...step, done: true, active: false }
+            : step.id === "retrieving"
+              ? { ...step, active: true }
+              : step,
+        ),
+      );
+      setProgressMessage("Collecting your scan details...");
+      setRawResult(text);
+    } catch (error: any) {
+      setScanError(
+        error?.message ?? "We could not upload your scan. Please try again.",
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setProgressSteps((prev) =>
-      prev.map((step) =>
-        step.id === "upload"
-          ? { ...step, done: true, active: false }
-          : step.id === "processing"
-            ? { ...step, active: true }
-            : step,
-      ),
-    );
-    setProgressMessage("Reading your scan with Google AI...");
-
-    const data = await processScanFile(
-      uploadResult.filePath,
-      uploadResult.mimeType ?? inputFile.type,
-    );
-    const text = data?.data.text;
-
-    if (!text) {
-      setScanError("We could not read this scan. Please try a clearer image.");
-      setLoading(false);
-      return;
-    }
-
-    setProgressSteps((prev) =>
-      prev.map((step) =>
-        step.id === "processing"
-          ? { ...step, done: true, active: false }
-          : step.id === "retrieving"
-            ? { ...step, active: true }
-            : step,
-      ),
-    );
-    setProgressMessage("Collecting your scan details...");
-    setRawResult(text);
   });
 
   const handleReplaceImage = withDelay(resetScanState);

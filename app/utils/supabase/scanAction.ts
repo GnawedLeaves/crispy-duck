@@ -110,7 +110,7 @@ export async function processScanFile(
 export async function handleFileUpload(formData: FormData) {
   const file = formData.get("file") as File | null;
   if (!file) return;
-  
+
   const uploadResult = await uploadScanToStorage(file);
 
   if (!uploadResult.success || !uploadResult.filePath) return;
@@ -191,3 +191,60 @@ export const getUserTanitaScans = async () => {
 
   return { data, error: null };
 };
+// ⬇️ ADD THIS FUNCTION to your scanAction.ts (keep everything else the same)
+
+export async function uploadScanToStorageFromBuffer(
+  arrayBuffer: ArrayBuffer,
+  fileName: string,
+  mimeType: string,
+): Promise<StorageUploadResult> {
+  console.log("=== uploadScanToStorageFromBuffer START ===");
+  console.log("Params:", { fileName, mimeType, bufferSize: arrayBuffer.byteLength });
+
+  if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+    return { success: false, error: "Empty file buffer received." };
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const fileExt = fileName.split(".").pop()?.toLowerCase() ?? "jpg";
+    const uniqueName = `${Math.random()}.${fileExt}`;
+    const filePath = `uploads/${Date.now()}_${uniqueName}`;
+
+    const resolvedMimeType = mimeType || "image/jpeg";
+
+    console.log("📤 Uploading to Supabase:", { filePath, resolvedMimeType });
+
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from("scans")
+      .upload(filePath, arrayBuffer, {
+        contentType: resolvedMimeType,
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (storageError) {
+      console.error("❌ Storage error:", storageError);
+      return {
+        success: false,
+        error: `Storage upload failed: ${storageError.message}`,
+      };
+    }
+
+    console.log("✅ Upload successful:", storageData.path);
+
+    return {
+      success: true,
+      filePath: storageData.path,
+      mimeType: resolvedMimeType,
+    };
+  } catch (err: any) {
+    console.error("❌ Upload error:", err);
+    return {
+      success: false,
+      error: err?.message ?? "Upload failed.",
+    };
+  }
+}
