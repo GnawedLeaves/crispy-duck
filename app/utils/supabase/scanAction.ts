@@ -7,7 +7,8 @@ import { cookies } from "next/headers";
 
 export interface ProcessScanResponse {
   success: boolean;
-  data: ScanData;
+  data?: ScanData;
+  error?: string;
 }
 
 export interface ScanData {
@@ -87,6 +88,22 @@ export async function processScanFile(
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    console.log("🔐 Auth Status:", {
+      authenticated: !!user,
+      error: authError?.message,
+    });
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: `Authentication failed: ${authError?.message || "No user"}. Are you logged in?`,
+      };
+    }
 
     const { data: functionData, error: functionError } =
       await supabase.functions.invoke("process-scan", {
