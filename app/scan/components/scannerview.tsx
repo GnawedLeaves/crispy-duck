@@ -4,10 +4,15 @@ import { AnimatedLoadingText } from "@/app/components/loading/AnimatedLoading";
 import { token } from "@/app/theme";
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { parseTautaScan, withDelay } from "@/app/utils/common";
+import {
+  mapScanRowToScanData,
+  TanitaScanRow,
+} from "@/app/utils/supabase/scanTypes";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, ViewTransition } from "react";
 import EditFormView, { loadDraftFromCookie } from "./editFormView";
+import ScanHistoryList from "./scanHistoryList";
 
 // How many required fields can be empty before we consider the scan invalid
 const EMPTY_FIELDS_THRESHOLD = 5;
@@ -118,8 +123,12 @@ interface ScannerViewProps {
 }
 
 type ViewStep = "scan" | "edit" | "success";
+type MainTab = "add" | "history";
 
 const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
+  const [activeTab, setActiveTab] = useState<MainTab>("add");
+  const [editingScan, setEditingScan] = useState<TanitaScanRow | null>(null);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [step, setStep] = useState<ViewStep>("scan");
   const [imagePreview, setImagePreview] = useState<string | null>(null); // base64
   const [inputFile, setInputFile] = useState<File | null>(null);
@@ -297,6 +306,22 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
     setScanData(null);
   };
 
+  if (editingScan) {
+    return (
+      <EditFormView
+        imagePreview={null}
+        scanId={editingScan.id}
+        initialData={mapScanRowToScanData(editingScan)}
+        currentUserId={currentUserId}
+        onSuccess={() => {
+          setEditingScan(null);
+          setHistoryRefreshKey((prev) => prev + 1);
+        }}
+        onBack={() => setEditingScan(null)}
+      />
+    );
+  }
+
   if (step === "success") {
     return (
       <div className="flexCenter min-h-[70vh] flex-col gap-4">
@@ -344,72 +369,113 @@ const ScannerView = ({ handleFileUpload, currentUserId }: ScannerViewProps) => {
   // step === "scan"
   return (
     <ViewTransition>
-      <div className="flexCenter min-h-[70vh] w-full flex-col gap-6">
-        {imagePreview && (
-          <Image
-            alt="scan_preview_image"
-            width={200}
-            height={200}
-            src={imagePreview}
-            className="standardBorder"
+      <div className="flexCenter w-full flex-col gap-6">
+        <div className="flex gap-2 w-full max-w-lg">
+          <button
+            className={
+              activeTab === "add" ? "standardButtonPressed flex-1" : "standardButton flex-1"
+            }
+            style={{
+              background:
+                activeTab === "add"
+                  ? token.light.primaryColor
+                  : token.light.background,
+            }}
+            onClick={() => setActiveTab("add")}
+          >
+            Add Scan
+          </button>
+          <button
+            className={
+              activeTab === "history" ? "standardButtonPressed flex-1" : "standardButton flex-1"
+            }
+            style={{
+              background:
+                activeTab === "history"
+                  ? token.light.primaryColor
+                  : token.light.background,
+            }}
+            onClick={() => setActiveTab("history")}
+          >
+            Past Scans
+          </button>
+        </div>
+
+        {activeTab === "history" ? (
+          <ScanHistoryList
+            currentUserId={currentUserId}
+            refreshKey={historyRefreshKey}
+            onEditScan={setEditingScan}
           />
-        )}
-
-        {loading ? (
-          <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
-            <div className="flex items-center gap-3">
-              <span className="loading loading-spinner loading-md" />
-            </div>
-            {/* {progressMessage && (
-              <p className="text-sm opacity-60">{progressMessage}</p>
-            )} */}
-            <AnimatedLoadingText
-              messages={[
-                "Squeezing your fats...",
-                "Gripping your muscles...",
-                "Checking your water levels...",
-                "Measuring your head width...",
-                "Feeding ducks...",
-              ]}
-              interval={5000}
-            />
-            <ScanProgressChecklist steps={progressSteps} />
-          </div>
-        ) : inputFile ? (
-          <div className="flexCenter gap-4">
-            <button
-              className="standardButton "
-              style={{ background: token.light.primaryColor }}
-              onClick={handleConfirmUpload}
-            >
-              Scan
-            </button>
-            <button className="standardButton" onClick={handleReplaceImage}>
-              Replace
-            </button>
-          </div>
         ) : (
-          <label className="standardButton cursor-pointer font-bold flexCenter">
-            Add File
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
-        )}
+          <div className="flexCenter min-h-[60vh] w-full flex-col gap-6">
+            {imagePreview && (
+              <Image
+                alt="scan_preview_image"
+                width={200}
+                height={200}
+                src={imagePreview}
+                className="standardBorder"
+              />
+            )}
 
-        {scanError && (
-          <div className="cardWithShadow flex flex-col gap-3 text-center max-w-xs">
-            <p className="text-sm font-semibold">⚠️ Couldn't read this image</p>
-            <p className="text-sm opacity-60">{scanError}</p>
-            <button
-              className="standardButton bg-red-100!"
-              onClick={handleReplaceImage}
-            >
-              Try a different image
-            </button>
+            {loading ? (
+              <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+                <div className="flex items-center gap-3">
+                  <span className="loading loading-spinner loading-md" />
+                </div>
+                {/* {progressMessage && (
+                  <p className="text-sm opacity-60">{progressMessage}</p>
+                )} */}
+                <AnimatedLoadingText
+                  messages={[
+                    "Squeezing your fats...",
+                    "Gripping your muscles...",
+                    "Checking your water levels...",
+                    "Measuring your head width...",
+                    "Feeding ducks...",
+                  ]}
+                  interval={5000}
+                />
+                <ScanProgressChecklist steps={progressSteps} />
+              </div>
+            ) : inputFile ? (
+              <div className="flexCenter gap-4">
+                <button
+                  className="standardButton "
+                  style={{ background: token.light.primaryColor }}
+                  onClick={handleConfirmUpload}
+                >
+                  Scan
+                </button>
+                <button className="standardButton" onClick={handleReplaceImage}>
+                  Replace
+                </button>
+              </div>
+            ) : (
+              <label className="standardButton cursor-pointer font-bold flexCenter">
+                Add File
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {scanError && (
+              <div className="cardWithShadow flex flex-col gap-3 text-center max-w-xs">
+                <p className="text-sm font-semibold">⚠️ Couldn't read this image</p>
+                <p className="text-sm opacity-60">{scanError}</p>
+                <button
+                  className="standardButton bg-red-100!"
+                  onClick={handleReplaceImage}
+                >
+                  Try a different image
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

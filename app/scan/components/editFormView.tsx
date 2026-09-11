@@ -1,7 +1,7 @@
 "use client";
 
 import { ITautaScanData } from "@/app/types/commonTypes";
-import { uploadScanData } from "@/app/utils/supabase/scanAction";
+import { updateScanData, uploadScanData } from "@/app/utils/supabase/scanAction";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { withDelay } from "@/app/utils/common";
@@ -49,6 +49,8 @@ interface EditFormViewProps {
   onSuccess: () => void;
   onBack: () => void;
   imagePreview: string | null;
+  /** When set, the form edits an existing saved scan instead of creating a new one. */
+  scanId?: string;
 }
 
 // Scan data goes in a cookie (readable server-side if ever needed)
@@ -186,7 +188,9 @@ const EditFormView = ({
   onSuccess,
   onBack,
   imagePreview,
+  scanId,
 }: EditFormViewProps) => {
+  const isEditingExisting = !!scanId;
   const rawDate = initialData?.scanDate;
   let formattedDate = "";
 
@@ -220,12 +224,15 @@ const EditFormView = ({
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // persist draft to cookie on every change (imagePreview stored in sessionStorage)
+  // Skipped when editing an already-saved scan so it doesn't clobber an
+  // in-progress "new scan" draft the user may have parked.
   useEffect(() => {
+    if (isEditingExisting) return;
     saveDraftToCookie(formData, imagePreview);
-  }, [formData, imagePreview]);
+  }, [formData, imagePreview, isEditingExisting]);
 
   const onBackClick = withDelay(() => {
-    clearDraftCookie();
+    if (!isEditingExisting) clearDraftCookie();
     onBack();
   });
 
@@ -263,7 +270,9 @@ const EditFormView = ({
     }
 
     try {
-      const { error: dbError } = await uploadScanData(formData, currentUserId);
+      const { error: dbError } = isEditingExisting
+        ? await updateScanData(scanId!, formData, currentUserId)
+        : await uploadScanData(formData, currentUserId);
       if (dbError) {
         // Try to parse server error to identify problematic field
         const errorMessage = dbError.message;
@@ -280,7 +289,7 @@ const EditFormView = ({
         }
         return;
       }
-      clearDraftCookie();
+      if (!isEditingExisting) clearDraftCookie();
       onSuccess();
     } catch (err: any) {
       setError(err.message ?? "Something went wrong. Please try again.");
@@ -308,11 +317,19 @@ const EditFormView = ({
         )}
       </div>
       <div className="w-full">
-        <h2 className="text-xl font-semibold mb-1">Review your scan</h2>
+        <h2 className="text-xl font-semibold mb-1">
+          {isEditingExisting ? "Edit scan" : "Review your scan"}
+        </h2>
         <p className="text-sm opacity-60">
-          Check values before saving to profile.
-          <br />
-          You may leave and continue later.
+          {isEditingExisting ? (
+            "Update the values below and save your changes."
+          ) : (
+            <>
+              Check values before saving to profile.
+              <br />
+              You may leave and continue later.
+            </>
+          )}
         </p>
       </div>
 
@@ -405,6 +422,8 @@ const EditFormView = ({
         >
           {loading ? (
             <span className="loading loading-spinner loading-sm" />
+          ) : isEditingExisting ? (
+            "Update scan"
           ) : (
             "Save scan"
           )}
