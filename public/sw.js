@@ -3,12 +3,12 @@ self.addEventListener("push", function (event) {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || "/icon.png",
-      badge: "/badge.png",
+      icon: data.icon || "/android-chrome-192x192.png",
+      badge: data.badge || "/android-chrome-192x192.png",
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
-        primaryKey: "2",
+        url: data.url || "/",
       },
     };
     event.waitUntil(self.registration.showNotification(data.title, options));
@@ -16,9 +16,24 @@ self.addEventListener("push", function (event) {
 });
 
 self.addEventListener("notificationclick", function (event) {
-  console.log("Notification click received.");
   event.notification.close();
-  event.waitUntil(clients.openWindow("<https://your-website.com>"));
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((windowClients) => {
+        for (const client of windowClients) {
+          const clientPath = new URL(client.url).pathname;
+          if (clientPath === targetUrl && "focus" in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      }),
+  );
 });
 
 // Add an install event to skip waiting

@@ -2,6 +2,7 @@
 
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { updateScanData, uploadScanData } from "@/app/utils/supabase/scanAction";
+import { notifyFriendsOfNewScan } from "@/app/utils/supabase/notificationAction";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { withDelay } from "@/app/utils/common";
@@ -306,7 +307,14 @@ const EditFormView = ({
         );
         return;
       }
-      if (!isEditingExisting) clearDraftCookie();
+      if (!isEditingExisting) {
+        clearDraftCookie();
+        // Fire-and-forget: friends' push notifications shouldn't block the
+        // save flow or the success toast.
+        notifyFriendsOfNewScan(currentUserId).catch((err) =>
+          console.error("Failed to notify friends of new scan:", err),
+        );
+      }
       triggerToast(
         isEditingExisting ? "Scan updated!" : "Scan saved!",
         token.light.primaryColor,

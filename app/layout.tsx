@@ -9,6 +9,7 @@ import { Providers } from "./providers";
 import PWARegister from "./utils/pwa/pwa";
 import { ViewTransition } from "react";
 import { ToastProvider } from "./components/toast/toastNotification";
+import NotificationPermissionPrompt from "./components/notifications/notificationPermissionPrompt";
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -58,7 +59,10 @@ export default function RootLayout({
           <ViewTransition name="navbar-shell">
             <Navbar />
           </ViewTransition>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <NotificationPermissionPrompt />
+            {children}
+          </ToastProvider>
         </Providers>
       </body>
     </html>

@@ -120,3 +120,13 @@ export interface TremorColorItem {
   name: TremorLineGraphColor;
   hexCode: string;
 }
+
+// Shape of the browser's PushSubscription.toJSON(), sent to the server to be
+// stored and later used to deliver web push notifications.
+export interface PushSubscriptionPayload {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}

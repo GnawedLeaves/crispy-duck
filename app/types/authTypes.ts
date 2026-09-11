@@ -27,6 +27,8 @@ export interface UserProfile {
   birthday: string;
   sex?: "M" | "F" | "NA";
   graphColor?: TremorLineGraphColor;
+  notifications_enabled?: boolean;
+  notifications_prompted?: boolean;
 }
 
 //main User type
