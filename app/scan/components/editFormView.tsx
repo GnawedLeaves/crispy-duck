@@ -1,13 +1,14 @@
 "use client";
 
 import { ITautaScanData } from "@/app/types/commonTypes";
-import { uploadScanData } from "@/app/utils/supabase/scanAction";
+import { updateScanData, uploadScanData } from "@/app/utils/supabase/scanAction";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { withDelay } from "@/app/utils/common";
 import { NativeBirthdayPicker } from "@/app/components/birthdayPicker/NativeBirthdayPicker";
 import dayjs from "dayjs";
 import { token } from "@/app/theme";
+import { useToast } from "@/app/components/toast/toastNotification";
 
 const COOKIE_KEY = "tauta_scan_draft";
 const IMAGE_STORAGE_KEY = "tauta_scan_image";
@@ -49,6 +50,10 @@ interface EditFormViewProps {
   onSuccess: () => void;
   onBack: () => void;
   imagePreview: string | null;
+  /** When set, the form edits an existing saved scan instead of creating a new one. */
+  scanId?: string;
+  /** Storage path of the newly uploaded scan image, saved alongside a new scan. */
+  scanImageId?: string | null;
 }
 
 // Scan data goes in a cookie (readable server-side if ever needed)
@@ -186,7 +191,11 @@ const EditFormView = ({
   onSuccess,
   onBack,
   imagePreview,
+  scanId,
+  scanImageId,
 }: EditFormViewProps) => {
+  const isEditingExisting = !!scanId;
+  const { triggerToast } = useToast();
   const rawDate = initialData?.scanDate;
   let formattedDate = "";
 
@@ -203,11 +212,18 @@ const EditFormView = ({
     }
   }
 
+  // scanTime comes in as a bare "HH:mm" (freshly OCR'd) or "HH:mm:ss" (Postgres
+  // `time` column) string, neither of which dayjs can parse without a date —
+  // pull the hours/minutes out directly instead of round-tripping through it.
+  const timeMatch = initialData.scanTime
+    ? String(initialData.scanTime).match(/^(\d{1,2}):(\d{2})/)
+    : null;
+
   const normalizedInitialData = {
     ...initialData,
     scanDate: formattedDate,
-    scanTime: initialData.scanTime
-      ? dayjs(initialData.scanTime).format("HH:mm")
+    scanTime: timeMatch
+      ? `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}`
       : "",
   };
 
@@ -220,12 +236,15 @@ const EditFormView = ({
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // persist draft to cookie on every change (imagePreview stored in sessionStorage)
+  // Skipped when editing an already-saved scan so it doesn't clobber an
+  // in-progress "new scan" draft the user may have parked.
   useEffect(() => {
+    if (isEditingExisting) return;
     saveDraftToCookie(formData, imagePreview);
-  }, [formData, imagePreview]);
+  }, [formData, imagePreview, isEditingExisting]);
 
   const onBackClick = withDelay(() => {
-    clearDraftCookie();
+    if (!isEditingExisting) clearDraftCookie();
     onBack();
   });
 
@@ -263,7 +282,9 @@ const EditFormView = ({
     }
 
     try {
-      const { error: dbError } = await uploadScanData(formData, currentUserId);
+      const { error: dbError } = isEditingExisting
+        ? await updateScanData(scanId!, formData, currentUserId)
+        : await uploadScanData(formData, currentUserId, scanImageId);
       if (dbError) {
         // Try to parse server error to identify problematic field
         const errorMessage = dbError.message;
@@ -278,12 +299,27 @@ const EditFormView = ({
         } else {
           setError(errorMessage ?? "Something went wrong. Please try again.");
         }
+        triggerToast(
+          isEditingExisting ? "Failed to update scan" : "Failed to save scan",
+          token.light.redColor,
+          4000,
+        );
         return;
       }
-      clearDraftCookie();
+      if (!isEditingExisting) clearDraftCookie();
+      triggerToast(
+        isEditingExisting ? "Scan updated!" : "Scan saved!",
+        token.light.primaryColor,
+        4000,
+      );
       onSuccess();
     } catch (err: any) {
       setError(err.message ?? "Something went wrong. Please try again.");
+      triggerToast(
+        isEditingExisting ? "Failed to update scan" : "Failed to save scan",
+        token.light.redColor,
+        4000,
+      );
     } finally {
       setLoading(false);
     }
@@ -308,11 +344,19 @@ const EditFormView = ({
         )}
       </div>
       <div className="w-full">
-        <h2 className="text-xl font-semibold mb-1">Review your scan</h2>
+        <h2 className="text-xl font-semibold mb-1">
+          {isEditingExisting ? "Edit scan" : "Review your scan"}
+        </h2>
         <p className="text-sm opacity-60">
-          Check values before saving to profile.
-          <br />
-          You may leave and continue later.
+          {isEditingExisting ? (
+            "Update the values below and save your changes."
+          ) : (
+            <>
+              Check values before saving to profile.
+              <br />
+              You may leave and continue later.
+            </>
+          )}
         </p>
       </div>
 
@@ -405,6 +449,8 @@ const EditFormView = ({
         >
           {loading ? (
             <span className="loading loading-spinner loading-sm" />
+          ) : isEditingExisting ? (
+            "Update scan"
           ) : (
             "Save scan"
           )}

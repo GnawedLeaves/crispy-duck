@@ -2,6 +2,7 @@
 
 import { ITautaScanData } from "@/app/types/commonTypes";
 import { createClient } from "@/app/utils/supabase/server";
+import { TanitaScanRow } from "@/app/utils/supabase/scanTypes";
 import dayjs from "dayjs";
 import { cookies } from "next/headers";
 
@@ -124,6 +125,7 @@ export async function handleFileUpload(formData: FormData) {
 export const uploadScanData = async (
   scannedData: ITautaScanData,
   currentUserId: string,
+  scanImageId?: string | null,
 ) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
@@ -151,8 +153,60 @@ export const uploadScanData = async (
       bmi: scannedData.bmi,
       degree_of_obesity: scannedData.degreeOfObesity || null,
       ideal_body_weight: scannedData.idealBodyWeight || null,
+      scan_image_id: scanImageId || null,
     },
   ]);
+
+  return { data, error };
+};
+
+export const updateScanData = async (
+  scanId: string,
+  scannedData: ITautaScanData,
+  currentUserId: string,
+) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  const formattedDate = dayjs(scannedData.scanDate, "DD/MMM/YYYY").isValid()
+    ? dayjs(scannedData.scanDate, "DD/MMM/YYYY").format("YYYY-MM-DD")
+    : dayjs(scannedData.scanDate).format("YYYY-MM-DD");
+
+  const { data, error } = await supabase
+    .from("tanita_scans")
+    .update({
+      scan_date: formattedDate,
+      scan_time: scannedData.scanTime,
+      weight: scannedData.weight,
+      clothes_weight: scannedData.clothesWeight,
+      fat_percentage: scannedData.fatPercentage,
+      fat_mass: scannedData.fatMass,
+      ffm: scannedData.ffm,
+      muscle_mass: scannedData.muscleMass,
+      tbw: scannedData.tbw,
+      tbw_percent: scannedData.tbwPercent,
+      bone_mass: scannedData.boneMass,
+      bmr: scannedData.bmr,
+      metabolic_age: scannedData.metabolicAge,
+      visceral_fat_rating: scannedData.visceralFatRating,
+      bmi: scannedData.bmi,
+      degree_of_obesity: scannedData.degreeOfObesity || null,
+      ideal_body_weight: scannedData.idealBodyWeight || null,
+    })
+    .eq("id", scanId)
+    .eq("user_id", currentUserId);
+
+  return { data, error };
+};
+
+export const deleteScanData = async (scanId: string, currentUserId: string) => {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("tanita_scans")
+    .delete()
+    .eq("id", scanId)
+    .eq("user_id", currentUserId);
 
   return { data, error };
 };
@@ -189,7 +243,7 @@ export const getUserTanitaScans = async () => {
     };
   }
 
-  return { data, error: null };
+  return { data: data as TanitaScanRow[], error: null };
 };
 // ⬇️ ADD THIS FUNCTION to your scanAction.ts (keep everything else the same)
 
@@ -199,7 +253,11 @@ export async function uploadScanToStorageFromBuffer(
   mimeType: string,
 ): Promise<StorageUploadResult> {
   console.log("=== uploadScanToStorageFromBuffer START ===");
-  console.log("Params:", { fileName, mimeType, bufferSize: arrayBuffer.byteLength });
+  console.log("Params:", {
+    fileName,
+    mimeType,
+    bufferSize: arrayBuffer.byteLength,
+  });
 
   if (!arrayBuffer || arrayBuffer.byteLength === 0) {
     return { success: false, error: "Empty file buffer received." };
@@ -247,4 +305,29 @@ export async function uploadScanToStorageFromBuffer(
       error: err?.message ?? "Upload failed.",
     };
   }
+}
+
+// Scans bucket is private, so callers need a short-lived signed URL to display
+// a previously uploaded scan image (e.g. when editing a past scan).
+export async function getScanImageUrl(
+  scanImageId: string,
+): Promise<string | null> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase.storage
+    .from("scans")
+    .createSignedUrl(scanImageId, 3600);
+
+  if (error) {
+    console.error("❌ Failed to create signed URL:", error);
+    return null;
+  }
+
+  return data.signedUrl;
 }

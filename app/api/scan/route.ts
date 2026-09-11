@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     console.log("✅ Processing complete");
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, filePath: uploadResult.filePath });
   } catch (error: any) {
     console.error("❌ API error:", error);
     return NextResponse.json(
