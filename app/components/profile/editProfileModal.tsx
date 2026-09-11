@@ -14,9 +14,23 @@ import { useAuth } from "@/app/context/AuthContext";
 import { NativeBirthdayPicker } from "../birthdayPicker/NativeBirthdayPicker";
 import { token } from "@/app/theme";
 import { handleEmptyProfilePic } from "@/app/utils/common";
+import NotificationSettingsToggle from "../notifications/notificationSettingsToggle";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const USERNAME_MIN_LENGTH = 7;
+
+// Convert File to raw base64 (without the data:xxx;base64, prefix) so it can
+// be sent to the Server Action as a plain string instead of a File object.
+const fileToRawBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 interface EditProfileProps {
   isOpen: boolean;
@@ -94,22 +108,28 @@ const EditProfileModal = ({
     e.preventDefault();
     if (!existingUser?.id) return;
 
-    if (usernameStatus === "taken") {
-      setFormError("That username is already taken.");
-      return;
-    }
-    if (username.length < USERNAME_MIN_LENGTH) {
-      setFormError(
-        `Username must be at least ${USERNAME_MIN_LENGTH} characters.`,
-      );
-      return;
-    }
+    // Only enforce username rules when it's actually being changed — an
+    // existing account may predate current validation and shouldn't be
+    // blocked from saving other fields (e.g. avatar) because of it.
+    const usernameChanged = username !== (existingUser?.profile?.username || "");
+    if (usernameChanged) {
+      if (usernameStatus === "taken") {
+        setFormError("That username is already taken.");
+        return;
+      }
+      if (username.length < USERNAME_MIN_LENGTH) {
+        setFormError(
+          `Username must be at least ${USERNAME_MIN_LENGTH} characters.`,
+        );
+        return;
+      }
 
-    if (!USERNAME_REGEX.test(username)) {
-      setFormError(
-        "Username can only contain letters, numbers, and underscores.",
-      );
-      return;
+      if (!USERNAME_REGEX.test(username)) {
+        setFormError(
+          "Username can only contain letters, numbers, and underscores.",
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -119,9 +139,12 @@ const EditProfileModal = ({
       let avatarUrl = existingUser.profile?.avatar_url ?? null;
 
       if (avatarFile) {
+        const base64 = await fileToRawBase64(avatarFile);
         const { url, error: uploadError } = await uploadAvatar(
           existingUser.id,
-          avatarFile,
+          base64,
+          avatarFile.name,
+          avatarFile.type || "image/jpeg",
         );
         if (uploadError) {
           setFormError(uploadError.message);
@@ -129,11 +152,7 @@ const EditProfileModal = ({
           return;
         }
 
-        // SANITY CHECK: Ensure 'url' is a string, not an object response
-        avatarUrl =
-          typeof url === "object" && url !== null
-            ? (url as any).url || (url as any).path
-            : url;
+        avatarUrl = url;
       }
       const { error } = await updateUserProfile({
         userId: existingUser.id,
@@ -152,7 +171,11 @@ const EditProfileModal = ({
         onClose();
       }
     } catch (err) {
-      setFormError("An unexpected error occurred while saving.");
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred while saving.",
+      );
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -323,6 +346,8 @@ const EditProfileModal = ({
             onChange={(dateString) => setBirthday(dateString)}
           />
         </div>
+
+        <NotificationSettingsToggle />
 
         {formError && (
           <div className="text-red-500 text-sm mt-2">{formError}</div>

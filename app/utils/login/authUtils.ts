@@ -315,26 +315,38 @@ export const signUpAsGuestAction = async () => {
 const AVATAR_BUCKET = "avatars";
 const MAX_AVATAR_SIZE_MB = 5;
 
-export async function uploadAvatar(userId: string, file: File) {
+// Takes a raw base64 string (no `data:...;base64,` prefix) rather than a
+// File object — passing a File directly across the Server Action boundary
+// is the same class of bug that was worked around for scan uploads (see
+// uploadScanToStorageFromBuffer in scanAction.ts: iOS Safari + Vercel drop
+// or mangle File/FormData payloads sent to Server Actions).
+export async function uploadAvatar(
+  userId: string,
+  base64: string,
+  fileName: string,
+  mimeType: string,
+) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  if (!file.type.startsWith("image/")) {
+  if (!mimeType.startsWith("image/")) {
     return { url: null, error: { message: "Please select an image file." } };
   }
-  if (file.size > MAX_AVATAR_SIZE_MB * 1024 * 1024) {
+
+  const buffer = Buffer.from(base64, "base64");
+  if (buffer.byteLength > MAX_AVATAR_SIZE_MB * 1024 * 1024) {
     return {
       url: null,
       error: { message: `Image must be under ${MAX_AVATAR_SIZE_MB}MB.` },
     };
   }
 
-  const fileExt = file.name.split(".").pop();
+  const fileExt = fileName.split(".").pop() || "jpg";
   const filePath = `${userId}/avatar.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .upload(filePath, file, { upsert: true });
+    .upload(filePath, buffer, { contentType: mimeType, upsert: true });
 
   if (uploadError) {
     return { url: null, error: uploadError };
