@@ -125,6 +125,7 @@ export async function handleFileUpload(formData: FormData) {
 export const uploadScanData = async (
   scannedData: ITautaScanData,
   currentUserId: string,
+  scanImageId?: string | null,
 ) => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
@@ -152,6 +153,7 @@ export const uploadScanData = async (
       bmi: scannedData.bmi,
       degree_of_obesity: scannedData.degreeOfObesity || null,
       ideal_body_weight: scannedData.idealBodyWeight || null,
+      scan_image_id: scanImageId || null,
     },
   ]);
 
@@ -303,4 +305,29 @@ export async function uploadScanToStorageFromBuffer(
       error: err?.message ?? "Upload failed.",
     };
   }
+}
+
+// Scans bucket is private, so callers need a short-lived signed URL to display
+// a previously uploaded scan image (e.g. when editing a past scan).
+export async function getScanImageUrl(
+  scanImageId: string,
+): Promise<string | null> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase.storage
+    .from("scans")
+    .createSignedUrl(scanImageId, 3600);
+
+  if (error) {
+    console.error("❌ Failed to create signed URL:", error);
+    return null;
+  }
+
+  return data.signedUrl;
 }

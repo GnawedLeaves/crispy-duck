@@ -8,27 +8,35 @@ import {
   getUserTanitaScans,
 } from "@/app/utils/supabase/scanAction";
 import { TanitaScanRow } from "@/app/utils/supabase/scanTypes";
+import { useToast } from "@/app/components/toast/toastNotification";
 import dayjs from "dayjs";
 import { Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ScanHistoryListProps {
   currentUserId: string;
   onEditScan: (scan: TanitaScanRow) => void;
   /** Bumped by the parent whenever a scan is saved elsewhere, to trigger a refetch. */
   refreshKey: number;
+  /** Scan id to scroll back into view, e.g. after returning from editing it. */
+  scrollToScanId?: string | null;
+  onScrolledToScan?: () => void;
 }
 
 const ScanHistoryList = ({
   currentUserId,
   onEditScan,
   refreshKey,
+  scrollToScanId,
+  onScrolledToScan,
 }: ScanHistoryListProps) => {
   const [scans, setScans] = useState<TanitaScanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { triggerToast } = useToast();
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const fetchScans = async () => {
     setLoading(true);
@@ -47,6 +55,18 @@ const ScanHistoryList = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
+  // After returning from editing a scan, scroll that card back into view
+  // instead of leaving the user wherever the page happened to land.
+  useEffect(() => {
+    if (!scrollToScanId || loading) return;
+    const el = rowRefs.current[scrollToScanId];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    onScrolledToScan?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToScanId, loading, scans]);
+
   const handleConfirmDelete = withDelay(async () => {
     if (!pendingDeleteId) return;
     setDeleting(true);
@@ -57,10 +77,12 @@ const ScanHistoryList = ({
     setDeleting(false);
     setPendingDeleteId(null);
     if (deleteError) {
-      setError(deleteError.message);
+      triggerToast("Failed to delete scan", token.light.redColor, 4000);
+      console.error(deleteError);
       return;
     }
     setScans((prev) => prev.filter((scan) => scan.id !== pendingDeleteId));
+    triggerToast("Scan deleted!", token.light.primaryColor, 4000);
   });
 
   if (loading) {
@@ -97,7 +119,13 @@ const ScanHistoryList = ({
     <>
       <div className="flex w-full max-w-lg mx-auto flex-col gap-3">
         {scans.map((scan) => (
-          <div key={scan.id} className="cardWithShadow flex items-center justify-between gap-3">
+          <div
+            key={scan.id}
+            ref={(el) => {
+              rowRefs.current[scan.id] = el;
+            }}
+            className="cardWithShadow flex items-center justify-between gap-3"
+          >
             <div className="flex flex-col gap-1">
               <div className="font-semibold">
                 {dayjs(scan.scan_date).format("DD MMM YYYY")}

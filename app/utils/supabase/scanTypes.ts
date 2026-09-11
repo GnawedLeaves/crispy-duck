@@ -20,6 +20,7 @@ export interface TanitaScanRow {
   bmi: number;
   degree_of_obesity: number | null;
   ideal_body_weight: number | null;
+  scan_image_id: string | null;
 }
 
 // Reverses the mapping in uploadScanData/updateScanData, so a saved row can be
