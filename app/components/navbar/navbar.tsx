@@ -11,7 +11,7 @@ import styles from "./navbar.module.css";
 const Navbar = () => {
   const { user } = useAuth();
   const pathname = usePathname();
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => pathname.includes(path);
   const isActiveMany = (paths: string[]) => {
     const res = paths.find((path) => pathname.includes(path));
     if (res) return true;
