@@ -21,6 +21,7 @@ export function useAiInsight() {
     }
 
     setIsLoading(false);
+    return result;
   };
 
   const clear = () => {

@@ -1,8 +1,11 @@
 "use client";
 
+import { useAuth } from "@/app/context/AuthContext";
 import { token } from "@/app/theme";
 import { useAiInsight } from "@/app/utils/hooks/useAiInsight";
 import { BodyScanDataPoint } from "@/app/utils/supabase/getBodyScanDataAction";
+import { saveAiAnalysis } from "@/app/utils/supabase/aiAnalysisAction";
+import { useToast } from "@/app/components/toast/toastNotification";
 import { Check, Copy, RotateCcw, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -34,16 +37,34 @@ const StatsAiInsights = ({
     clear: clearInsight,
   } = useAiInsight();
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
+  const { triggerToast } = useToast();
 
-  const handleGenerateInsights = () => {
+  const handleGenerateInsights = async () => {
     if (!trendData || trendData.length === 0) return;
-    generate({
+    const result = await generate({
       prompt:
         "Analyze my recent body composition scans and provide performance insights.",
       systemInstruction: SYSTEM_INSTRUCTION,
       tone: "motivating, athletic, and direct",
       context: trendData,
     });
+
+    if (result?.success && result.text && user?.id) {
+      const { error: saveError } = await saveAiAnalysis(
+        result.text,
+        trendData,
+        user.id,
+      );
+      if (saveError) {
+        console.error(saveError);
+        triggerToast(
+          "Analysis generated, but couldn't be saved",
+          token.light.redColor,
+          4000,
+        );
+      }
+    }
   };
 
   const handleClearInsight = () => {
